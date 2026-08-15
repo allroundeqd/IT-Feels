@@ -1,6 +1,16 @@
 # AI Agents Log
 This file tracks major technical decisions, features implemented, and architecture shifts guided by AI agents.
 
+> [!CAUTION]
+> **CRITICAL ARCHITECTURE RULE (DUAL-CODEBASE SYSTEM)**
+> This app is the "Clean/Addon" Upstream App (`IT_Feels_Alternate`). It acts as the UI and OS backbone for the downstream "Hardcoded API" app (`IT-Feels`).
+> 
+> **AI AGENT DIRECTIVES (NEVER BREAK THESE):**
+> - **DO NOT** write UI, layout, bug fixes, or native OS features in the Hardcoded `IT-Feels` app first. 
+> - **ALL UI/OS DEVELOPMENT** must be done HERE in `IT_Feels_Alternate`.
+> - **TO SYNC UPDATES**, instruct the user to run `git pull upstream master` from within the `IT-Feels` directory.
+> - **DO NOT** migrate this Alternate app to `media_kit` unless explicitly requested. It uses `just_audio` by default. Do not copy code blindly from the downstream Hardcoded app!
+
 ## Latest Agent Iteration
 - **Universal Desktop & Mobile OS Integrations (v3.6.8):**
   - **Apple CarPlay & iOS Home Screen Widgets**: Implemented a native Swift `TimelineProvider` widget using `home_widget` and App Groups (`group.com.itfeels.music`) to broadcast real-time Now Playing metadata to the iOS 14+ home screen with zero Flutter background drain. Enabled the `playable-content` and `carplay-audio` entitlements in `Runner.entitlements` to seamlessly route `audio_service` intents to Apple CarPlay dashboards.

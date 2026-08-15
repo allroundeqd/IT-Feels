@@ -1,9 +1,26 @@
 import 'package:flutter/material.dart';
-
+import 'package:flutter/services.dart';
 import 'package:it_feels_music/data/services/addon_manager.dart';
 
-class AddonManagerCard extends StatelessWidget {
+class AddonManagerCard extends StatefulWidget {
   const AddonManagerCard({super.key});
+
+  @override
+  State<AddonManagerCard> createState() => _AddonManagerCardState();
+}
+
+class _AddonManagerCardState extends State<AddonManagerCard> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!AddonManager().hasPlugins) {
+        Clipboard.setData(const ClipboardData(
+          text: 'https://raw.githubusercontent.com/Allrounder687/it-feels-provider-backend/main/backend_addon.js',
+        ));
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -11,7 +28,7 @@ class AddonManagerCard extends StatelessWidget {
       valueListenable: AddonManager().hasPluginsNotifier,
       builder: (context, hasPlugins, child) {
         if (hasPlugins) {
-          return const SizedBox.shrink(); // Hide if already installed to keep UI clean, or show a tiny badge
+          return const SizedBox.shrink(); 
         }
 
         return Container(
@@ -29,10 +46,10 @@ class AddonManagerCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.extension_rounded, color: Theme.of(context).colorScheme.primary),
+                  Icon(Icons.auto_awesome_rounded, color: Theme.of(context).colorScheme.primary),
                   const SizedBox(width: 12),
                   Text(
-                    'Enhance Your Experience',
+                    'Experience the Magic',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -41,40 +58,35 @@ class AddonManagerCard extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'IT-Feels is a powerful neutral media player. To search and stream content, install community-developed provider addons.',
+                'IT-Feels is a neutral media player. We\'ve prepared a magic link in your clipboard! Just hit Paste & Install below to instantly unlock the full experience.',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 16),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: [
-                  FilledButton.icon(
-                    onPressed: () async {
-                      final success = await AddonManager().installDefaultPlugin();
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(success ? 'Addon installed successfully!' : 'Failed to install addon'),
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                      }
-                    },
-                    icon: const Icon(Icons.download_rounded, size: 18),
-                    label: const Text('Install Default Addon'),
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: () {
+              FilledButton.icon(
+                onPressed: () async {
+                  final data = await Clipboard.getData(Clipboard.kTextPlain);
+                  final url = data?.text?.trim() ?? '';
+                  if (url.isNotEmpty && url.startsWith('http')) {
+                    final success = await AddonManager().installPluginFromUrl(url, 'custom_addon.js');
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(success ? 'Magic successfully unlocked!' : 'Failed to install from clipboard'),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  } else {
+                    if (context.mounted) {
                       _showUrlInstallDialog(context);
-                    },
-                    icon: const Icon(Icons.link_rounded, size: 18),
-                    label: const Text('Add from URL'),
-                  ),
-                ],
-              )
+                    }
+                  }
+                },
+                icon: const Icon(Icons.content_paste_rounded, size: 18),
+                label: const Text('Paste & Install'),
+              ),
             ],
           ),
         );
