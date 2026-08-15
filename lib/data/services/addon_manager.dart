@@ -198,6 +198,55 @@ class AddonManager {
         debugPrint('[AddonManager] searchPodcasts error in plugin: $e');
       }
     }
+    }
+    return allResults;
+  }
+
+  Future<List<Map<String, dynamic>>> searchVideos(String query) async {
+    List<Map<String, dynamic>> allResults = [];
+    for (var runtime in _activeRuntimes) {
+      try {
+        final jsResult = runtime.evaluate("typeof getSearchVideosUrl === 'function' ? getSearchVideosUrl('${query.replaceAll("'", "\\'")}') : null");
+        final searchUrl = jsResult.stringResult.replaceAll('"', '');
+        
+        if (searchUrl != 'null' && searchUrl.isNotEmpty) {
+          debugPrint('[AddonManager] Fetching searchVideos from: $searchUrl');
+          final response = await http.get(Uri.parse(searchUrl));
+          if (response.statusCode == 200) {
+            final data = jsonDecode(response.body);
+            if (data['success'] == true && data['results'] != null) {
+              allResults = List<Map<String, dynamic>>.from(data['results']);
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('[AddonManager] searchVideos error in plugin: $e');
+      }
+    }
+    return allResults;
+  }
+
+  Future<List<Map<String, dynamic>>> getTrendingVideos() async {
+    List<Map<String, dynamic>> allResults = [];
+    for (var runtime in _activeRuntimes) {
+      try {
+        final jsResult = runtime.evaluate("typeof getTrendingVideosUrl === 'function' ? getTrendingVideosUrl() : null");
+        final searchUrl = jsResult.stringResult.replaceAll('"', '');
+        
+        if (searchUrl != 'null' && searchUrl.isNotEmpty) {
+          debugPrint('[AddonManager] Fetching trendingVideos from: $searchUrl');
+          final response = await http.get(Uri.parse(searchUrl));
+          if (response.statusCode == 200) {
+            final data = jsonDecode(response.body);
+            if (data['success'] == true && data['results'] != null) {
+              allResults = List<Map<String, dynamic>>.from(data['results']);
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('[AddonManager] trendingVideos error in plugin: $e');
+      }
+    }
     return allResults;
   }
 
@@ -227,6 +276,30 @@ class AddonManager {
     return null;
   }
   
+  Future<Map<String, dynamic>> getVideoStreams(String videoId, String? query) async {
+    for (var runtime in _activeRuntimes) {
+      try {
+        final safeQuery = query?.replaceAll("'", "\\'") ?? '';
+        final jsResult = runtime.evaluate("typeof getStreamUrl === 'function' ? getStreamUrl('${videoId.replaceAll("'", "\\'")}', '$safeQuery') : null");
+        final streamApiUrl = jsResult.stringResult.replaceAll('"', '');
+        
+        if (streamApiUrl != 'null' && streamApiUrl.isNotEmpty) {
+          debugPrint('[AddonManager] Fetching video streams from: $streamApiUrl');
+          final response = await http.get(Uri.parse(streamApiUrl));
+          if (response.statusCode == 200) {
+            final data = jsonDecode(response.body);
+            if (data['success'] == true && data['streams'] != null) {
+              return data;
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('[AddonManager] getVideoStreams error in plugin: $e');
+      }
+    }
+    return {'success': false, 'streams': []};
+  }
+
   Future<Map<String, dynamic>?> getHomeFeed() async {
     for (var runtime in _activeRuntimes) {
       try {

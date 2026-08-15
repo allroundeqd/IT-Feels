@@ -214,18 +214,17 @@ class MusicRepository implements IMusicRepository {
     String? query,
     bool bypassCache = false,
   }) async {
-    // Stripped of YouTube Explode native extraction for strict legal compliance.
-    return {'success': false, 'streams': []};
+    return await addonManager.getVideoStreams(videoId, query);
   }
 
   @override
   Future<List<Map<String, dynamic>>> searchVideos(String query) async {
-    return [];
+    return await addonManager.searchVideos(query);
   }
 
   @override
   Future<List<Map<String, dynamic>>> getTrendingVideos({int limit = 20}) async {
-    return [];
+    return await addonManager.getTrendingVideos();
   }
 
   @override
@@ -233,7 +232,7 @@ class MusicRepository implements IMusicRepository {
     String query, {
     int limit = 20,
   }) async {
-    return [];
+    return await addonManager.searchVideos(query);
   }
 
   @override
