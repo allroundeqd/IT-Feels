@@ -824,21 +824,21 @@ class VideoPlayerNotifier extends Notifier<VideoPlayerState> {
   }
 
   void seek(Duration duration) {
-    if (state.player == null) return;
+    if (state.player == null || state.isLoading) return;
     final currentPos = state.player!.state.position;
     var targetPos = currentPos + duration;
     var maxDur = state.player!.state.duration;
     if (targetPos < Duration.zero) targetPos = Duration.zero;
-    if (targetPos > maxDur) targetPos = maxDur;
+    if (maxDur.inMilliseconds > 0 && targetPos > maxDur) targetPos = maxDur;
     state.player!.seek(targetPos);
   }
 
   void seekTo(Duration position) {
-    if (state.player == null) return;
+    if (state.player == null || state.isLoading) return;
     var targetPos = position;
     var maxDur = state.player!.state.duration;
     if (targetPos < Duration.zero) targetPos = Duration.zero;
-    if (targetPos > maxDur) targetPos = maxDur;
+    if (maxDur.inMilliseconds > 0 && targetPos > maxDur) targetPos = maxDur;
     state.player!.seek(targetPos);
   }
 
