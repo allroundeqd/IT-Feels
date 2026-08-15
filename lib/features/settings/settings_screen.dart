@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
+import 'package:it_feels_music/data/services/addon_manager.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shorebird_code_push/shorebird_code_push.dart';
@@ -322,7 +324,31 @@ class SettingsScreen extends ConsumerWidget {
           ),
 
           // ══════════════════════════════════════
-          // SECTION 3: STORAGE & OFFLINE
+          // SECTION 3: PROVIDER ADDONS
+          // ══════════════════════════════════════
+          ValueListenableBuilder<bool>(
+            valueListenable: AddonManager().hasPluginsNotifier,
+            builder: (context, hasPlugins, child) {
+              return _buildCollapsibleSection(
+                context: context,
+                title: "Provider Addons",
+                subtitle: hasPlugins ? "Active addons installed" : "No addons installed",
+                icon: Icons.extension_rounded,
+                children: [
+                  _buildActionItem(
+                    context: context,
+                    title: "Manage Addons",
+                    subtitle: "Configure backend providers for search and streaming",
+                    icon: Icons.api_rounded,
+                    onTap: () => _showAddonManagerDialog(context),
+                  ),
+                ],
+              );
+            }
+          ),
+
+          // ══════════════════════════════════════
+          // SECTION 4: STORAGE & OFFLINE
           // ══════════════════════════════════════
           _buildCollapsibleSection(
             context: context,
@@ -843,5 +869,154 @@ class SettingsScreen extends ConsumerWidget {
     } else if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Failed to check for updates. Check your connection.")));
     }
+  }
+
+  void _showAddonManagerDialog(BuildContext context) {
+    if (!AddonManager().hasPlugins) {
+      Clipboard.setData(const ClipboardData(text: 'https://raw.githubusercontent.com/Allrounder687/it-feels-provider-backend/main/backend_addon.js'));
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: context.themeSurfaceColor,
+        title: Text("Provider Addons", style: GoogleFonts.outfit(color: context.themeTextColor, fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Addons enable search and streaming via remote backend APIs.", style: GoogleFonts.inter(color: context.themeMutedTextColor)),
+            const SizedBox(height: 24),
+            ValueListenableBuilder<bool>(
+              valueListenable: AddonManager().hasPluginsNotifier,
+              builder: (context, hasPlugins, _) {
+                if (hasPlugins) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.check_circle_rounded, color: Colors.green, size: 20),
+                          const SizedBox(width: 8),
+                          Text("Status: Active", style: GoogleFonts.inter(color: Colors.green, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      FilledButton.icon(
+                        onPressed: () async {
+                          await AddonManager().uninstallAllPlugins();
+                          Clipboard.setData(const ClipboardData(text: 'https://raw.githubusercontent.com/Allrounder687/it-feels-provider-backend/main/backend_addon.js'));
+                          if (ctx.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Addons uninstalled. Magic link copied to clipboard!')));
+                          }
+                        },
+                        style: FilledButton.styleFrom(backgroundColor: Colors.red.withOpacity(0.15), foregroundColor: Colors.red),
+                        icon: const Icon(Icons.delete_outline_rounded),
+                        label: const Text('Uninstall All Addons'),
+                      ),
+                    ],
+                  );
+                } else {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.info_outline_rounded, color: context.themeMutedTextColor, size: 20),
+                          const SizedBox(width: 8),
+                          Text("Status: None installed", style: GoogleFonts.inter(color: context.themeMutedTextColor)),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      FilledButton.icon(
+                        onPressed: () async {
+                          final data = await Clipboard.getData(Clipboard.kTextPlain);
+                          final url = data?.text?.trim() ?? '';
+                          if (url.isNotEmpty && url.startsWith('http')) {
+                            final success = await AddonManager().installPluginFromUrl(url, 'custom_addon.js');
+                            if (ctx.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(success ? 'Addon successfully installed!' : 'Failed to install from clipboard')),
+                              );
+                            }
+                          } else {
+                            if (ctx.mounted) {
+                              _showUrlInstallDialog(context);
+                            }
+                          }
+                        },
+                        icon: const Icon(Icons.content_paste_rounded),
+                        label: const Text('Paste & Install URL'),
+                      ),
+                      const SizedBox(height: 8),
+                      TextButton.icon(
+                        onPressed: () {
+                          _showUrlInstallDialog(context);
+                        },
+                        icon: const Icon(Icons.edit_rounded, size: 16),
+                        label: const Text('Enter URL manually'),
+                      ),
+                    ],
+                  );
+                }
+              }
+            )
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Close', style: TextStyle(color: context.themeMutedTextColor)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showUrlInstallDialog(BuildContext context) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: context.themeSurfaceColor,
+        title: Text('Install Addon from URL', style: GoogleFonts.outfit(color: context.themeTextColor)),
+        content: TextField(
+          controller: controller,
+          style: TextStyle(color: context.themeTextColor),
+          decoration: InputDecoration(
+            hintText: 'https://...',
+            hintStyle: TextStyle(color: context.themeMutedTextColor),
+            labelText: 'Addon .js URL',
+            labelStyle: TextStyle(color: context.themeAccentColor),
+            enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: context.themeMutedTextColor.withOpacity(0.3))),
+            focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: context.themeAccentColor)),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel', style: TextStyle(color: context.themeMutedTextColor)),
+          ),
+          FilledButton(
+            onPressed: () async {
+              final url = controller.text.trim();
+              if (url.isNotEmpty) {
+                final success = await AddonManager().installPluginFromUrl(url, 'custom_addon.js');
+                if (ctx.mounted) {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(success ? 'Addon installed!' : 'Failed to install from URL'),
+                    ),
+                  );
+                }
+              }
+            },
+            style: FilledButton.styleFrom(backgroundColor: context.themeAccentColor, foregroundColor: Colors.white),
+            child: const Text('Install'),
+          ),
+        ],
+      ),
+    );
   }
 }

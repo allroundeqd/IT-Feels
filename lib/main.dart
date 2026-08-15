@@ -25,6 +25,7 @@ import 'package:it_feels_music/features/auth/banned_screen.dart';
 import 'package:it_feels_music/features/admin/in_app_broadcast_listener.dart';
 import 'package:it_feels_music/data/services/smart_storage_service.dart';
 import 'package:it_feels_music/data/services/addon_manager.dart';
+import 'package:it_feels_music/services/local_proxy_server.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:windows_single_instance/windows_single_instance.dart';
@@ -54,6 +55,8 @@ late ProviderContainer appProviderContainer;
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  await LocalProxyServer.start();
+
   if (Platform.isWindows) {
     await WindowsSingleInstance.ensureSingleInstance(
       args,

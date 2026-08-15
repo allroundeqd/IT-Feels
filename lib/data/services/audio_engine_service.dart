@@ -259,12 +259,12 @@ class AudioEngineService {
     _mediaItemSub?.cancel();
     _sleepTimer?.cancel();
     _sleepTimerController.close();
-    _sleepAfterTrackController.close();
+        _sleepAfterTrackController.close();
   }
 
   void _setupWindowsTaskbar() {
     try {
-      WindowsTaskbar.resetThumbnailToolbar();
+      WindowsTaskbar.resetThumbnailToolbar().catchError((_) {});
       WindowsTaskbar.setThumbnailToolbar([
         ThumbnailToolbarButton(
           ThumbnailToolbarAssetIcon('assets/icons/prev.ico'),
@@ -281,7 +281,7 @@ class AudioEngineService {
           'Next',
           () => audioHandler.skipToNext(),
         ),
-      ]);
+      ]).catchError((_) {});
     } catch (_) {}
   }
 
@@ -303,14 +303,13 @@ class AudioEngineService {
           'Next',
           () => audioHandler.skipToNext(),
         ),
-      ]);
+      ]).catchError((_) {});
       
       if (isPlaying) {
-        WindowsTaskbar.setOverlayIcon(ThumbnailToolbarAssetIcon('assets/icons/play.ico'), tooltip: 'Playing');
+        WindowsTaskbar.setOverlayIcon(ThumbnailToolbarAssetIcon('assets/icons/play.ico'), tooltip: 'Playing').catchError((_) {});
       } else {
-        WindowsTaskbar.setOverlayIcon(ThumbnailToolbarAssetIcon('assets/icons/pause.ico'), tooltip: 'Paused');
+        WindowsTaskbar.setOverlayIcon(ThumbnailToolbarAssetIcon('assets/icons/pause.ico'), tooltip: 'Paused').catchError((_) {});
       }
     } catch (_) {}
   }
-
 }

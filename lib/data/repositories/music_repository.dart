@@ -108,7 +108,11 @@ class MusicRepository implements IMusicRepository {
   Future<List<Song>> getPlaylistTracks(String id) async => [];
 
   @override
-  Future<List<Song>> searchPodcasts(String query, {int count = 10}) async => [];
+  Future<List<Song>> searchPodcasts(String query, {int count = 10}) async {
+    final addonManager = AddonManager();
+    final results = await addonManager.searchPodcasts(query);
+    return results.take(count).toList();
+  }
 
   @override
   Future<String?> resolveStream(Song song) async => null;
@@ -129,7 +133,14 @@ class MusicRepository implements IMusicRepository {
   Future<List<Playlist>> searchAlbums(String query, {int? page, int? count}) async => [];
 
   @override
-  Future<List<Playlist>> searchPlaylists(String query, {int? page, int? count}) async => [];
+  Future<List<Playlist>> searchPlaylists(String query, {int? page, int? count}) async {
+    final addonManager = AddonManager();
+    final results = await addonManager.searchPlaylists(query);
+    if (count != null) {
+      return results.take(count).toList();
+    }
+    return results;
+  }
 
   @override
   Future<Song?> fetchSongDetails(String token) async => null;

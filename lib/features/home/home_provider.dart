@@ -794,8 +794,11 @@ class HomeNotifier extends Notifier<HomeState> {
             }
           },
         );
-        trending = List<Song>.from(data['trending'] ?? []);
-        rawPlaylists = List<Playlist>.from(data['playlists'] ?? []);
+        final rawTrending = data['trending'] as List? ?? [];
+        trending = rawTrending.map((e) => e is Song ? e : Song.fromJson(e)).toList();
+        
+        final rawPl = data['playlists'] as List? ?? [];
+        rawPlaylists = rawPl.map((e) => e is Playlist ? e : Playlist.fromJson(e)).toList();
         debugPrint('[HomeNotifier] Loaded storefront via Saavn Fallback');
       }
     } catch (e) {

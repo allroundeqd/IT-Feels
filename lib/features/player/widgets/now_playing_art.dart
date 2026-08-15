@@ -38,14 +38,15 @@ class NowPlayingArt extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final videoProvider = ref.watch(videoPlayerProvider);
 
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 400),
-      switchInCurve: Curves.easeInOut,
-      switchOutCurve: Curves.easeInOut,
-      transitionBuilder: (Widget child, Animation<double> animation) {
-        return FadeTransition(opacity: animation, child: child);
-      },
-      child: isVideoMode 
+    return ExcludeSemantics(
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 400),
+        switchInCurve: Curves.easeInOut,
+        switchOutCurve: Curves.easeInOut,
+        transitionBuilder: (Widget child, Animation<double> animation) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+        child: isVideoMode 
         ? AspectRatio(
             aspectRatio: 16 / 9,
             child: Container(
@@ -319,6 +320,7 @@ class NowPlayingArt extends ConsumerWidget {
                 ),
             ],
           ),
+      ),
     );
   }
 

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_js/flutter_js.dart';
 import 'package:it_feels_music/data/models/song_model.dart';
+import 'package:it_feels_music/services/local_proxy_server.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 
@@ -59,9 +60,27 @@ class AddonManager {
         return true;
       }
     } catch (e) {
+    } catch (e) {
       debugPrint('[AddonManager] Error installing plugin from URL: $e');
     }
     return false;
+  }
+
+  Future<void> uninstallAllPlugins() async {
+    _activeRuntimes.clear();
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final pluginsDir = Directory('${dir.path}/plugins');
+      if (await pluginsDir.exists()) {
+        final files = pluginsDir.listSync().where((f) => f.path.endsWith('.js'));
+        for (var file in files) {
+          await file.delete();
+        }
+      }
+    } catch (e) {
+      debugPrint('[AddonManager] Error uninstalling plugins: $e');
+    }
+    hasPluginsNotifier.value = false;
   }
 
   Future<void> _loadPlugin(FileSystemEntity file) async {
@@ -82,9 +101,10 @@ class AddonManager {
     for (var runtime in _activeRuntimes) {
       try {
         final jsResult = runtime.evaluate("typeof getSearchUrl === 'function' ? getSearchUrl('${query.replaceAll("'", "\\'")}') : null");
-        final searchUrl = jsResult.stringResult;
+        final searchUrl = jsResult.stringResult.replaceAll('"', '');
         
-        if (searchUrl != null && searchUrl != 'null' && searchUrl.isNotEmpty) {
+        if (searchUrl != 'null' && searchUrl.isNotEmpty) {
+          debugPrint('[AddonManager] Fetching search from: $searchUrl');
           final response = await http.get(Uri.parse(searchUrl));
           if (response.statusCode == 200) {
             final data = jsonDecode(response.body);
@@ -102,6 +122,8 @@ class AddonManager {
                 ));
               }
             }
+          } else {
+            debugPrint('[AddonManager] Search failed with status: ${response.statusCode} from $searchUrl');
           }
         }
       } catch (e) {
@@ -111,19 +133,91 @@ class AddonManager {
     return allResults;
   }
 
+  Future<List<Playlist>> searchPlaylists(String query) async {
+    List<Playlist> allResults = [];
+    for (var runtime in _activeRuntimes) {
+      try {
+        final jsResult = runtime.evaluate("typeof getSearchPlaylistsUrl === 'function' ? getSearchPlaylistsUrl('${query.replaceAll("'", "\\'")}') : null");
+        final searchUrl = jsResult.stringResult.replaceAll('"', '');
+        
+        if (searchUrl != 'null' && searchUrl.isNotEmpty) {
+          debugPrint('[AddonManager] Fetching searchPlaylists from: $searchUrl');
+          final response = await http.get(Uri.parse(searchUrl));
+          if (response.statusCode == 200) {
+            final data = jsonDecode(response.body);
+            if (data['success'] == true && data['results'] != null) {
+              for (var item in data['results']) {
+                allResults.add(Playlist(
+                  id: item['id']?.toString() ?? '',
+                  title: item['title']?.toString() ?? '',
+                  type: item['type']?.toString() ?? 'playlist',
+                  coverArt: item['image']?.toString() ?? item['coverArt']?.toString() ?? '',
+                  songCount: int.tryParse(item['songCount']?.toString() ?? '0') ?? 0,
+                  songs: [],
+                ));
+              }
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('[AddonManager] searchPlaylists error in plugin: $e');
+      }
+    }
+    return allResults;
+  }
+
+  Future<List<Song>> searchPodcasts(String query) async {
+    List<Song> allResults = [];
+    for (var runtime in _activeRuntimes) {
+      try {
+        final jsResult = runtime.evaluate("typeof getSearchPodcastsUrl === 'function' ? getSearchPodcastsUrl('${query.replaceAll("'", "\\'")}') : null");
+        final searchUrl = jsResult.stringResult.replaceAll('"', '');
+        
+        if (searchUrl != 'null' && searchUrl.isNotEmpty) {
+          debugPrint('[AddonManager] Fetching searchPodcasts from: $searchUrl');
+          final response = await http.get(Uri.parse(searchUrl));
+          if (response.statusCode == 200) {
+            final data = jsonDecode(response.body);
+            if (data['success'] == true && data['results'] != null) {
+              for (var item in data['results']) {
+                allResults.add(Song(
+                  id: item['id']?.toString() ?? '',
+                  saavnId: item['id']?.toString() ?? '',
+                  title: item['title']?.toString() ?? '',
+                  artist: item['artist']?.toString() ?? '',
+                  album: item['album']?.toString() ?? 'Podcast',
+                  coverArt: item['coverArt']?.toString() ?? item['albumArt']?.toString() ?? '',
+                  duration: int.tryParse(item['duration']?.toString() ?? '0') ?? 0,
+                  addedAt: DateTime.now(),
+                ));
+              }
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('[AddonManager] searchPodcasts error in plugin: $e');
+      }
+    }
+    return allResults;
+  }
+
   Future<String?> getStreamUrl(Song song) async {
     for (var runtime in _activeRuntimes) {
       try {
-        final jsResult = runtime.evaluate("typeof getStreamUrl === 'function' ? getStreamUrl('${song.id.replaceAll("'", "\\'")}') : null");
-        final streamApiUrl = jsResult.stringResult;
+        final query = '${song.title} ${song.artist}'.replaceAll("'", "\\'");
+        final jsResult = runtime.evaluate("typeof getStreamUrl === 'function' ? getStreamUrl('${song.id.replaceAll("'", "\\'")}', '$query') : null");
+        final streamApiUrl = jsResult.stringResult.replaceAll('"', '');
         
-        if (streamApiUrl != null && streamApiUrl != 'null' && streamApiUrl.isNotEmpty) {
+        if (streamApiUrl != 'null' && streamApiUrl.isNotEmpty) {
+          debugPrint('[AddonManager] Fetching stream from: $streamApiUrl');
           final response = await http.get(Uri.parse(streamApiUrl));
           if (response.statusCode == 200) {
             final data = jsonDecode(response.body);
             if (data['success'] == true && data['audioUrl'] != null) {
-              return data['audioUrl'];
+              return LocalProxyServer.getProxyUrl(data['audioUrl']);
             }
+          } else {
+            debugPrint('[AddonManager] Stream failed with status: ${response.statusCode} from $streamApiUrl');
           }
         }
       } catch (e) {
@@ -137,16 +231,22 @@ class AddonManager {
     for (var runtime in _activeRuntimes) {
       try {
         final jsResult = runtime.evaluate("typeof getHomeFeedUrl === 'function' ? getHomeFeedUrl() : null");
-        final homeUrl = jsResult.stringResult;
-        
-        if (homeUrl != null && homeUrl != 'null' && homeUrl.isNotEmpty) {
+        final homeUrl = jsResult.stringResult.replaceAll('"', '');
+
+        if (homeUrl != 'null' && homeUrl.isNotEmpty) {
+          debugPrint('[AddonManager] Fetching home feed from: $homeUrl');
           final response = await http.get(Uri.parse(homeUrl));
           if (response.statusCode == 200) {
-            return jsonDecode(response.body);
+            final data = jsonDecode(response.body);
+            if (data['success'] == true && data['data'] != null) {
+              return data['data']; 
+            }
+          } else {
+            debugPrint('[AddonManager] HomeFeed failed with status: ${response.statusCode} from $homeUrl');
           }
         }
       } catch (e) {
-        debugPrint('[AddonManager] getHomeFeed error in plugin: $e');
+        debugPrint('[AddonManager] HomeFeed error in plugin: $e');
       }
     }
     return null;

@@ -24,7 +24,11 @@ class LocalProxyServer {
         final client = HttpClient();
         final clientRequest = await client.getUrl(Uri.parse(targetUrl));
         clientRequest.headers.set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36');
-        clientRequest.headers.set('Referer', 'https://www.youtube.com/');
+        if (targetUrl.contains('youtube') || targetUrl.contains('googlevideo')) {
+          clientRequest.headers.set('Referer', 'https://www.youtube.com/');
+        } else if (targetUrl.contains('saavn')) {
+          clientRequest.headers.set('Referer', 'https://www.jiosaavn.com/');
+        }
         
         if (request.headers.value('range') != null) {
           clientRequest.headers.set('range', request.headers.value('range')!);
