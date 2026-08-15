@@ -833,6 +833,15 @@ class VideoPlayerNotifier extends Notifier<VideoPlayerState> {
     state.player!.seek(targetPos);
   }
 
+  void seekTo(Duration position) {
+    if (state.player == null) return;
+    var targetPos = position;
+    var maxDur = state.player!.state.duration;
+    if (targetPos < Duration.zero) targetPos = Duration.zero;
+    if (targetPos > maxDur) targetPos = maxDur;
+    state.player!.seek(targetPos);
+  }
+
   void pauseVideo() {
     state.player?.pause();
   }

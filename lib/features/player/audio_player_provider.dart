@@ -1034,7 +1034,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       try {
         final videoNotifier = ref.read(videoPlayerProvider.notifier);
         if (videoNotifier.state.isVideoActive && videoNotifier.state.player != null) {
-          videoNotifier.seek(pos);
+          videoNotifier.seekTo(pos);
         }
       } catch (_) {}
     }
