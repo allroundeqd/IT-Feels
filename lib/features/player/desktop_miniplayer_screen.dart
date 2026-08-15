@@ -90,15 +90,22 @@ class _DesktopMiniplayerScreenState extends ConsumerState<DesktopMiniplayerScree
             fit: StackFit.expand,
             children: [
               // Background Canvas (Video or Artwork)
-              if (hasVideo)
-                Video(controller: videoState.videoController!, fit: BoxFit.cover, controls: NoVideoControls)
-              else if (videoState.isVideoActive)
-                const Center(child: CleverLoadingText())
-              else
-                _PiPLyricsView(
-                  song: currentSong,
-                  engine: engine,
+              ExcludeSemantics(
+                child: Builder(
+                  builder: (context) {
+                    if (hasVideo) {
+                      return Video(controller: videoState.videoController!, fit: BoxFit.cover, controls: NoVideoControls);
+                    } else if (videoState.isVideoActive) {
+                      return const Center(child: CleverLoadingText());
+                    } else {
+                      return _PiPLyricsView(
+                        song: currentSong,
+                        engine: engine,
+                      );
+                    }
+                  }
                 ),
+              ),
 
               // Overlay Gradient
               if (_isHovering || !isPlaying)

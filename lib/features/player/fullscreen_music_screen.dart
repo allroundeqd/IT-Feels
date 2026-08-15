@@ -84,10 +84,11 @@ class _FullscreenMusicScreenState extends ConsumerState<FullscreenMusicScreen> w
           children: [
             // Hardware-accelerated Glowing Background
             Positioned.fill(
-            child: AnimatedBuilder(
-              animation: _glowController,
-              builder: (context, child) {
-                return Stack(
+              child: ExcludeSemantics(
+                child: AnimatedBuilder(
+                  animation: _glowController,
+                  builder: (context, child) {
+                    return Stack(
                   children: [
                     // Base background
                     Container(color: bgColor),
