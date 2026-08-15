@@ -1,0 +1,244 @@
+import 'dart:convert';
+import 'dart:async';
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'package:it_feels_music/core/utils/hinglish_transliterator.dart';
+import 'package:it_feels_music/core/utils/lrc_parser.dart';
+import 'package:it_feels_music/data/models/song_model.dart';
+import 'package:it_feels_music/services/backend_api_service.dart';
+
+import 'package:string_similarity/string_similarity.dart';
+
+class LyricsResult {
+  final String? staticLyrics;
+  final List<LyricLine> syncedLyrics;
+  final String source;
+
+  LyricsResult({this.staticLyrics, this.syncedLyrics = const [], this.source = 'Unknown'});
+
+  bool get hasSynced => syncedLyrics.isNotEmpty;
+  bool get hasStatic => staticLyrics != null && staticLyrics!.isNotEmpty;
+}
+
+class LyricsService {
+  final Map<String, Map<String, LyricsResult>> _lyricsCache = {};
+  int _currentSessionId = 0;
+
+  void _enforceCacheLimit<K, V>(Map<K, V> cache, int maxSize) {
+    while (cache.length > maxSize) {
+      cache.remove(cache.keys.first);
+    }
+  }
+
+  /// Check if lyrics are already cached
+  bool isLyricsCached(String songId) => _lyricsCache.containsKey(songId) && _lyricsCache[songId]!.isNotEmpty;
+
+  /// Preload lyrics into cache asynchronously
+  Future<void> preloadLyrics(Song song) async {
+    if (isLyricsCached(song.id)) return;
+    fetchLyrics(song, onResult: (_) {});
+  }
+
+  /// Fetch lyrics for a song (Races Proxy, LRCLIB, Musixmatch and Saavn concurrently)
+  /// Short-circuits: once a synced result is found, subsequent results are cached but deprioritized.
+  void fetchLyrics(Song song, {Function(String)? onError, required void Function(LyricsResult) onResult}) {
+    _currentSessionId++;
+    final int sessionId = _currentSessionId;
+
+    if (_lyricsCache.containsKey(song.id) && _lyricsCache[song.id]!.isNotEmpty) {
+      for (final res in _lyricsCache[song.id]!.values) {
+        onResult(res);
+      }
+      return;
+    }
+
+    _lyricsCache[song.id] = {};
+    _enforceCacheLimit(_lyricsCache, 100);
+    
+    bool hasSyncedResult = false;
+    LyricsResult? pendingStaticResult;
+    Timer? staticDebounceTimer;
+
+    void tryComplete(LyricsResult? res) {
+      // Drop results from previous songs if the user skipped tracks rapidly
+      if (sessionId != _currentSessionId) return; 
+      
+      if (res != null && (res.hasSynced || res.hasStatic)) {
+        _lyricsCache[song.id]![res.source] = res;
+        
+        if (res.hasSynced) {
+          hasSyncedResult = true;
+          staticDebounceTimer?.cancel();
+          onResult(res);
+        } else if (!hasSyncedResult) {
+          // It's a static result. Hold it for 500ms to see if a synced result wins the race.
+          // This prevents UI jitter/flashing from Static -> Synced.
+          pendingStaticResult = res;
+          staticDebounceTimer?.cancel();
+          staticDebounceTimer = Timer(const Duration(milliseconds: 500), () {
+            if (sessionId == _currentSessionId && !hasSyncedResult && pendingStaticResult != null) {
+              onResult(pendingStaticResult!);
+            }
+          });
+        }
+      }
+    }
+
+    if (BackendApiService.useProxyBackend) {
+      unawaited(_fetchProxy(song).then(tryComplete).catchError((_) {}));
+    }
+    
+    unawaited(_fetchLrcLib(song).then(tryComplete).catchError((_) {}));
+  }
+
+  Future<LyricsResult?> _fetchProxy(Song song) async {
+    try {
+      final proxyResult = await BackendApiService.getLyrics(
+        song.title,
+        song.artist,
+        album: song.album,
+        duration: song.duration,
+      );
+
+      if (proxyResult != null) {
+        final syncedStr = proxyResult['synced'];
+        final plainStr = proxyResult['plain'];
+
+        List<LyricLine> parsedSynced = [];
+        if (syncedStr != null && syncedStr.isNotEmpty) {
+          parsedSynced = LrcParser.parse(syncedStr)
+              .map((l) {
+                final translit = HinglishTransliterator.transliterate(l.text);
+                return LyricLine(
+                  time: l.time,
+                  text: l.text,
+                  transliteration: translit != l.text ? translit : null,
+                );
+              })
+              .toList();
+        }
+
+        final staticText = (plainStr != null && plainStr.isNotEmpty)
+            ? HinglishTransliterator.transliterate(plainStr)
+            : null;
+
+        if (parsedSynced.isNotEmpty || staticText != null) {
+          return LyricsResult(
+            staticLyrics: staticText,
+            syncedLyrics: parsedSynced,
+            source: 'Proxy',
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('[LyricsService] Backend proxy lyrics error: $e');
+    }
+    return null;
+  }
+
+  Future<LyricsResult?> _fetchSaavn(Song song) async {
+    return null;
+  }
+
+  Future<LyricsResult?> _fetchLrcLib(Song song) async {
+    try {
+      final cleanTitle = song.title.replaceAll(RegExp(r'\s*\([^)]*\)'), '').replaceAll(RegExp(r'\s*\[[^\]]*\]'), '').trim();
+      final cleanArtist = song.artist.split(',').first.split('&').first.trim();
+      
+      if (song.duration > 0) {
+        final getUrl = Uri.parse(
+            'https://lrclib.net/api/get?track_name=${Uri.encodeComponent(cleanTitle)}&artist_name=${Uri.encodeComponent(cleanArtist)}&duration=${song.duration}');
+        final getResponse = await http.get(getUrl).timeout(const Duration(seconds: 3));
+        if (getResponse.statusCode == 200) {
+          final data = await compute(jsonDecode, getResponse.body);
+          final rawSynced = data['syncedLyrics']?.toString();
+          if (rawSynced != null && rawSynced.isNotEmpty) {
+            var syncedLrc = LrcParser.parse(rawSynced);
+            syncedLrc = syncedLrc.map((line) {
+                  final translit = HinglishTransliterator.transliterate(line.text);
+                  return LyricLine(
+                    time: line.time,
+                    text: line.text,
+                    transliteration: translit != line.text ? translit : null,
+                  );
+                }).toList();
+            return LyricsResult(syncedLyrics: syncedLrc, source: 'LRCLIB');
+          }
+        }
+      }
+
+      final query = '$cleanArtist $cleanTitle'.trim();
+      if (query.isEmpty) return null;
+      
+      final lrclibUrl = Uri.parse(
+          'https://lrclib.net/api/search?q=${Uri.encodeComponent(query)}');
+      final response = await http.get(lrclibUrl).timeout(const Duration(seconds: 4));
+
+      if (response.statusCode == 200) {
+        final data = await compute(jsonDecode, response.body);
+        if (data is List && data.isNotEmpty) {
+          String? bestLrc;
+          for (var item in data) {
+            final trackName = item['trackName']?.toString() ?? '';
+            final artistName = item['artistName']?.toString() ?? '';
+            
+            final targetTrack = trackName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+            final targetSongTitle = cleanTitle.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+            final targetArtist = artistName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+            final targetSongArtist = cleanArtist.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+
+            final titleSimilarity = targetTrack.similarityTo(targetSongTitle);
+            final artistSimilarity = targetArtist.similarityTo(targetSongArtist);
+
+            if (titleSimilarity < 0.3 && artistSimilarity < 0.2) continue;
+
+            final rawSynced = item['syncedLyrics']?.toString();
+            if (rawSynced != null && rawSynced.isNotEmpty) {
+              if (!HinglishTransliterator.hasDevanagari(rawSynced)) {
+                bestLrc = rawSynced;
+                break;
+              } else {
+                bestLrc ??= rawSynced;
+              }
+            }
+          }
+
+          if (bestLrc != null) {
+            var syncedLrc = LrcParser.parse(bestLrc);
+            syncedLrc = syncedLrc
+                .map((line) {
+                  final translit = HinglishTransliterator.transliterate(line.text);
+                  return LyricLine(
+                    time: line.time,
+                    text: line.text,
+                    transliteration: translit != line.text ? translit : null,
+                  );
+                })
+                .toList();
+            return LyricsResult(syncedLyrics: syncedLrc, source: 'LRCLIB');
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('[LyricsService] LRCLIB lyrics error: $e');
+    }
+    return null;
+  }
+
+  Future<LyricsResult?> _fetchMusixmatch(Song song) async {
+    return null;
+  }
+
+  static String _cleanText(String input) {
+    return input
+        .replaceAll('&quot;', '"')
+        .replaceAll('&amp;', '&')
+        .replaceAll('&#039;', "'")
+        .replaceAll('&lt;', '<')
+        .replaceAll('&gt;', '>')
+        .replaceAll('<br/>', '\n')
+        .replaceAll('<br />', '\n')
+        .replaceAll('<br>', '\n')
+        .replaceAll('&nbsp;', ' ');
+  }
+}

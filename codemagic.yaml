@@ -1,0 +1,41 @@
+workflows:
+  ios-unsigned-build:
+    name: iOS Unsigned Build (SideStore / TrollStore)
+    instance_type: mac_mini_m2
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Install dependencies
+        script: |
+          # Generate empty .env file if it's in gitignore to prevent dotenv crash
+          touch .env
+          flutter pub get
+      - name: Build iOS Unsigned
+        script: |
+          # Build a release .app without Apple Developer code signing
+          flutter build ios --release --no-codesign
+      - name: Package into .ipa
+        script: |
+          # Package the .app into a standard Payload ZIP and rename to .ipa for sideloading
+          cd build/ios/iphoneos
+          mkdir -p Payload
+          mv Runner.app Payload/
+          zip -qr ITFeels_Unsigned.ipa Payload
+      - name: Publish to GitHub Releases
+        script: |
+          #!/usr/bin/env bash
+          # This script uses the GitHub CLI to automatically create a release.
+          # You MUST add a GITHUB_TOKEN environment variable in Codemagic UI for this to work.
+          if [ -z "$CM_TAG" ]; then
+            echo "Not a tag build. Skipping GitHub release."
+            exit 0
+          fi
+          gh release create "$CM_TAG" \
+            --title "Release $CM_TAG" \
+            --notes "Automated release from Codemagic" \
+            build/ios/iphoneos/ITFeels_Unsigned.ipa
+    artifacts:
+      - build/ios/iphoneos/ITFeels_Unsigned.ipa
+      - /tmp/xcodebuild_logs/*.log

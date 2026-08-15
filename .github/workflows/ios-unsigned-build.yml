@@ -1,0 +1,182 @@
+name: iOS Unsigned Build
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+      - 'ios-v*'
+
+jobs:
+  build-ios:
+    name: Build unsigned iOS IPA
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+          
+      - name: Setup Shorebird
+        uses: shorebirdtech/setup-shorebird@v1
+        with:
+          cache: true
+          
+      - name: Create Dummy Env File
+        run: touch .env
+        
+      - name: Install dependencies
+        run: |
+          flutter config --enable-swift-package-manager
+          
+          # Initialize Shorebird Flutter SDK so files exist
+          shorebird flutter --version
+          
+          flutter clean
+          flutter pub get
+          
+          flutter clean
+          flutter pub get
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: ios/Pods
+          key: ${{ runner.os }}-pods-${{ hashFiles('ios/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+
+      - name: Inject Firebase Options
+        run: |
+          mkdir -p lib
+          if [ -n "${{ secrets.FIREBASE_OPTIONS_B64 }}" ]; then
+            echo "${{ secrets.FIREBASE_OPTIONS_B64 }}" | base64 -d > lib/firebase_options.dart
+            echo "Injected Firebase Options from Secret"
+          else
+            echo "Using tracked firebase_options.dart"
+          fi
+
+
+      - name: Build iOS without Code Signing
+        env:
+          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+        run: |
+          # 1. Ensure xcconfig contains DEVELOPMENT_TEAM & Code Signing overrides
+          for conf in Release Debug Profile Generated; do
+            if [ -f "ios/Flutter/$conf.xcconfig" ]; then
+              echo "DEVELOPMENT_TEAM=A1B2C3D4E5" >> "ios/Flutter/$conf.xcconfig"
+              echo "CODE_SIGNING_ALLOWED=NO" >> "ios/Flutter/$conf.xcconfig"
+              echo "CODE_SIGNING_REQUIRED=NO" >> "ios/Flutter/$conf.xcconfig"
+              echo "CODE_SIGN_IDENTITY=" >> "ios/Flutter/$conf.xcconfig"
+              echo "EXPANDED_CODE_SIGN_IDENTITY=" >> "ios/Flutter/$conf.xcconfig"
+              echo "IPHONEOS_DEPLOYMENT_TARGET=15.0" >> "ios/Flutter/$conf.xcconfig"
+            fi
+          done
+
+          # 2. Install CocoaPods dependencies & Generate SPM Package
+          flutter build ios --config-only
+          
+          cd ios
+          pod install
+          cd ..
+          
+          # 3. FORCE SPM Package.swift to iOS 15 (Fix for Flutter 3.24+ hardcoding 13.0)
+          echo "Finding and patching Package.swift files..."
+          find ios .symlinks -name "Package.swift" -type f -exec sed -i '' 's/"12\.0"/"15\.0"/g' {} + || true
+          find ios .symlinks -name "Package.swift" -type f -exec sed -i '' 's/"13\.0"/"15\.0"/g' {} + || true
+          find ios .symlinks -name "Package.swift" -type f -exec sed -i '' 's/"14\.0"/"15\.0"/g' {} + || true
+          
+          # 4. Re-inject into xcconfig in case flutter build rewrote them
+          for conf in Release Debug Profile Generated; do
+            if [ -f "ios/Flutter/$conf.xcconfig" ]; then
+              echo "IPHONEOS_DEPLOYMENT_TARGET=15.0" >> "ios/Flutter/$conf.xcconfig"
+            fi
+          done
+          
+          # BACKUP: Standard Flutter build (in case Shorebird causes issues)
+          # flutter build ios --release --no-codesign
+          
+          # 4. Build Release iOS app without code signing using Shorebird (fallback to standard flutter build if release exists)
+          shorebird release ios --no-codesign || (flutter clean && flutter build ios --release --no-codesign)
+
+
+      - name: Install ldid
+        env:
+          HOMEBREW_NO_REQUIRE_TAP_TRUST: 1
+        run: brew install ldid
+
+      - name: Package and Pseudo-sign into IPA
+        run: |
+          APP_PATH=$(find build/ios -name "Runner.app" -type d | head -n 1)
+          if [ -z "$APP_PATH" ]; then
+            echo "Runner.app not found. Build likely failed."
+            exit 1
+          fi
+          mkdir -p Payload
+          mv "$APP_PATH" Payload/
+          
+          # CRITICAL: Pseudo-sign the binary so it doesn't get Killed: 9
+          ldid -S Payload/Runner.app/Runner
+          
+          # Sign all embedded frameworks
+          find Payload/Runner.app/Frameworks -name "*.framework" -type d | while read framework; do
+            framework_name=$(basename "$framework" .framework)
+            if [ -f "$framework/$framework_name" ]; then
+              ldid -S "$framework/$framework_name"
+            fi
+          done
+          
+          # Sign any dylibs
+          find Payload/Runner.app -name "*.dylib" -type f | while read dylib; do
+            ldid -S "$dylib"
+          done
+          
+          zip -r IT-Feels.ipa Payload
+          mv IT-Feels.ipa it-feels-android-${{ github.ref_name }}.ipa
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: IT-Feels-iOS.ipa
+          path: it-feels-android-${{ github.ref_name }}.ipa
+
+      - name: Generate QR Code for Action Summary
+        run: |
+          URL="trollstore://install?url=https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/it-feels-android-${{ github.ref_name }}.ipa"
+          ENCODED_URL=$(python3 -c "import urllib.parse, sys; print(urllib.parse.quote(sys.argv[1]))" "$URL")
+          # We use a public QR code API to render the TrollStore URL in the summary
+          QR_URL="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${ENCODED_URL}"
+          
+          echo "### 📲 Install on iPad (TrollStore)" >> $GITHUB_STEP_SUMMARY
+          echo "**Tap this link from your iPad:** [Install Latest Build]($URL)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Or scan this QR Code using your iPad camera:**" >> $GITHUB_STEP_SUMMARY
+          echo "<br><img src=\"$QR_URL\" width=\"250\" height=\"250\">" >> $GITHUB_STEP_SUMMARY
+
+      - name: Create or Update Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "Release ${{ github.ref_name }}"
+          body: |
+            [📲 **Tap here to Install via TrollStore**](trollstore://install?url=https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/it-feels-android-${{ github.ref_name }}.ipa)
+            
+            *(Note: If you are on a computer, scan the QR code found in the [Actions Summary](https://github.com/${{ github.repository }}/actions) page)*
+          files: it-feels-android-${{ github.ref_name }}.ipa
+          prerelease: false
+          make_latest: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

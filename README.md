@@ -1,0 +1,170 @@
+
+# IT-Feels Music  🎵
+
+A modern, sleek, and feature-rich music player built with Flutter.
+
+IT-Feels is designed for music lovers who demand a clean interface and powerful functionality. Leveraging Flutter's cross-platform capabilities, it provides a native-feel experience on Android with high-fidelity audio playback.
+
+**Developer Details:**
+- **Developer:** FaiXal
+- **Repository:** IT-Feels Android
+- **Developer Portfolio:** FaiXal Portfolio
+- **GitHub Profile:** FaiXal on GitHub
+
+A premium, modern Flutter Android music application built with the design aesthetics of **IT-Feels Music** and powered by the **FEELS Cloud Proxy Engine**.
+
+![IT Feels Music Banner](https://img.shields.io/badge/IT%20Feels%20Music-Edition-FF4081?style=for-the-badge&logo=flutter)
+![Version](https://img.shields.io/badge/Version-3.6.0-blue?style=for-the-badge)
+![Flutter Version](https://img.shields.io/badge/Flutter-3.x-02569B?style=for-the-badge&logo=flutter)
+![Platform](https://img.shields.io/badge/Platform-Android-3DDC84?style=for-the-badge&logo=android)
+![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
+
+---
+
+## ✨ Highlights & Key Features
+
+- **IT Feels Music UI Aesthetics**: High-contrast dark themes (Burgundy `#220F19` & Midnight Blue `#090D16`), organic artwork bubble collages (`HeroCollage`), display typography (`Outfit` & `Inter`), dynamic glassmorphism, adaptive frosted control capsule, 3-zone clean top bar, inlined stream quality badges (`320 KBPS`/`LOSSLESS`), and custom squiggly progress bars (`WavySeekBar`).
+- **Live Social Suite & Admin Telemetry**: Includes real-time listening parties, direct track sharing to friends' inboxes, reactive in-app broadcasts, and full Admin Dashboard analytics.
+- **Native Intent Sharing**: Instantly invite friends to Listen Together rooms using zero-fee native WhatsApp deep links (`url_launcher`).
+- **Zero Cognitive Overload UX**: Graceful empty states, smooth animated transitions on all player controls, and zero-wait background video loading that falls back to 60fps album art while resolving streams.
+- **Unified Multi-Backend Search Engine**: Concurrently queries both the Saavn API and the IT-Feels Native Catalog, automatically merging, deduplicating, and relevance-sorting results with distinct UI badging.
+- **Instant Native Video Extraction**: Bypasses external proxies with a highly optimized local `youtube_explode_dart` engine that strictly fetches pre-muxed 720p streams to guarantee zero-latency audio/video synchronization.
+- **Batched Isolates & GC-Yielding**: Background downloading and smart caching runs inside yielding batch loops to give the Dart Garbage Collector time to sweep dead memory, completely preventing OOM crashes on budget devices.
+- **Multi-Provider Smart Playlist Engine:** Leverages three highly cost-efficient 2026 LLM backend proxies (ChatGPT `gpt-5.6-luna`, Claude `haiku-4-5-20251001`, Gemini `3.5-flash-lite`) for playlist generation, fully protected and routed via the Cloudflare Edge.
+- **Backend E2E Validation:** Ships with a standalone native Node.js testing harness (`npm run test`) for the Cloudflare Worker to rapidly iterate on AI prompts and KV caching without needing the mobile client.
+- **Curated Moods & Charts**: Dedicated dynamic tabs for curated mood playlists (with English/Hindi toggle) and top global streaming charts.
+- **Hidden Songs Manager**: Full control over your feed with the ability to hide unwanted songs and manage them via a dedicated privacy setting.
+- **Fully Populated Library Tabs**: Real dynamic data for `SONGS`, `FAVORITES`, `DOWNLOADS`, `ALBUMS`, `ARTIST`, and `PLAYLISTS`.
+- **Offline Download Manager**: Full `DownloadService` allowing users to download 320kbps audio streams (`.mp3`/`.mp4`) and cover art to local device storage (`path_provider`) for offline playback.
+- **Full Artist Discography (`ArtistDetailScreen`)**: Artist search (e.g., "Atif Aslam", "Arijit Singh") displays verified artist cards with avatar image, top songs, and discography albums & singles grid.
+- **Cloud-Powered High Quality Audio**: Real-time DES-ECB link decryption and 320kbps AAC/MP4 stream URL resolution (`DesDecryptor`), validated remotely via Cloudflare Workers for Premium users.
+- **30pt High-Contrast Synced Lyrics**: Devanagari-to-Romanized transliteration (`HinglishTransliterator`) with enlarged 30pt bold active line autoscroll, interactive tap-to-seek playback, and smooth scale transitions.
+- **Categorized Audio Quality & Settings**: Dedicated `SettingsScreen` for Wi-Fi streaming quality (`320 kbps` / `160 kbps`), mobile data quality, download quality, storage management, and theme selection.
+- **Hero Artwork Transitions & Persistent MiniPlayer**: Seamless morphing of album cover art and persistent MiniPlayer visibility across all internal app routes.
+- **Interactive Queue Drawer**: Bottom sheet (`QueueBottomSheet`) displaying upcoming tracks with tap-to-skip functionality.
+- **Background Playback & Lockscreen Controls**: Full Android `AudioService` integration with system notification media controls.
+
+---
+
+## 🛠️ Tech Stack & Dependencies
+
+- **Framework**: Flutter (Dart)
+- **Audio Playback Engine**: `just_audio` & `audio_service`
+- **Networking**: `http`
+- **Crypto & Decryption**: `encrypt` & `pointycastle` (DES-ECB deciphering)
+- **State Management**: `provider` & `flutter_riverpod`
+- **Image Caching & Palette**: `cached_network_image` & `palette_generator`
+- **Local Storage & Database**: `isar`, `shared_preferences` & `path_provider`
+- **UI & Fonts**: `google_fonts` (Outfit & Inter)
+
+### Project Architecture
+The project follows a Clean Architecture pattern, separating the UI (Presentation), Business Logic (Domain), and Data (Infrastructure) layers to ensure scalability and testability.
+
+---
+
+## 📚 Documentation
+
+All comprehensive project documentation has been consolidated into the [`docs/`](docs/) directory for cleaner repository management:
+- [Agent Steering Path](docs/STEERING_PATH.md)
+- [Architecture Overview](docs/ARCHITECTURE.md)
+- [AI Agents Log](docs/AGENTS.md)
+- [Roadmap](docs/ROADMAP.md)
+- [Changelog](docs/CHANGELOG.md)
+- [Testing Guide](docs/TESTING.md)
+- [CI/CD & OTA Updates](docs/CI_CD.md)
+- [Contributing](docs/CONTRIBUTING.md)
+- [Code of Conduct](docs/CODE_OF_CONDUCT.md)
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Flutter SDK (3.x+)
+- Android SDK (API Level 21+)
+- Connected Android Device or Emulator
+
+### Installation & Run
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/IT Feels MusicHQ/IT Feels Music.git
+   cd IT Feels Music
+   ```
+
+2. Fetch Flutter packages:
+   ```bash
+   flutter pub get
+   ```
+
+3. Run on your connected Android device:
+   ```bash
+   flutter run -d <device-id>
+   ```
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 📈 Growth & Technical Content Strategy
+
+### Ready-to-Publish Content Kit
+**Draft A: Reddit Showcase (r/SideProject)**
+> I built IT-Feels Music, an open-source Flutter music player focused on Material You aesthetics and performance.
+
+### Community Discovery & Audited Rules Matrix
+| Platform | Audit Result |
+|---|---|
+| `r/FlutterDev` | Showcase allowed with technical breakdown. |
+| `r/opensource` | Open source projects welcomed. |
+
+### Safe 30-Day Publication Schedule
+| Week | Platform | Goal |
+|---|---|---|
+| Week 1 | GitHub/Reddit | Initial Launch & Feedback |
+
+### Technical Articles Collection
+**Article 1: Designing a Robust Background Audio Architecture**
+```dart
+import 'package:audio_service/audio_service.dart';
+import 'package:just_audio/just_audio.dart';
+// Audio logic implementation...
+```
+
+### Results Tracking Framework
+| Date | Views | Stars | Notes |
+|---|---|---|---|
+| Day 1 | - | - | Initial tracking... |
+
+
+
+## Recent Updates
+- **OOM-Prevention & Social Expansion (3.6.0):** Added zero-cost native WhatsApp intent deep linking for Listen Together rooms. Overhauled the audio caching and background download logic using GC-yielding batch loops, completely preventing Out-Of-Memory exceptions on 2GB RAM devices when downloading massive playlists. Re-routed Premium validation logic to a secure Cloudflare Worker to instantly unlock lyrics for premium users without race conditions.
+- **Radio Resilience & Bug Fixes (3.5.26):** Fixed infinite fallback loops and `OverflowBox` layout exceptions, and prevented live radio streams from being auto-cached.
+- **Search Pagination & DI Architecture Release (3.5.15):** Integrated pagination for songs, albums, and playlists, added video search capabilities, and added ability to remove individual recent searches. Refactored `RadioApiService`, `SocialService`, and `LastfmService` for Dependency Injection to unblock testing. Fixed widget teardown exceptions in `VideoPlayerScreen` and cached Firebase streams in `SocialScreen`. Fixed CI pipeline issues with Shorebird and Filepicker.
+- **Agent Steering Path & Infrastructure:** Established a unified agent steering path ([`docs/STEERING_PATH.md`](docs/STEERING_PATH.md)) to align all AI agent-driven development, updated existing agent specifications (`agents/`), and developed a new `doc-writer-skill` for automated documentation management.
+- **Account Entitlement & Engine Resiliency Release (3.5.8):** Bound premium status strictly to authenticated user IDs (`/users/<uid>`), isolating guests and secondary accounts. Added isolate detection and fallback retries in `DatabaseService` to prevent `Collection id is invalid` crashes. Handled Firebase Auth error codes (`admin-restricted-operation`, `too-many-requests`) and set system locale. Optimized Piped stream extraction failover to 2.5s timeouts across healthy mirrors.
+- **Payment Gateways & Sync Bug Fixes (3.3.4):** Implemented License Key verification for external payments (Gumroad & Crypto), redesigned the zero cognitive overload auth flow for instant syncing, and resolved critical state desyncs in Listen Together rooms and CI/CD OTA Pipelines.
+- **Admin Telemetry & Live Social Expansion (3.2.0):** Overhauled LyricsService with concurrent Completer racing for <1s resolution. Upgraded the Admin Dashboard with real-time UI filtering and Global Broadcast capability. Finalized real-time synced rooms and the new Force Update OTA engine.
+- **World-Class Architecture Upgrade (3.1.0):** Deployed a Zero-Buffering local caching audio engine, Concurrent Network Racing for instant streaming, True Native OS Background Downloading, Live Karaoke Auto-Scroll, and Advanced Cloud Telemetry.
+- **Phase 3 Authentication (Listen Together):** Implemented Firebase Core and a highly secure, Zero Cognitive Overload Magic Auth bottom sheet for seamless cloud syncing.
+- **Ask Feels AI Engine:** Branded and updated smart playlist capabilities featuring "What are you feeling like?" UX.
+- **Dynamic UI Padding:** Fluid edge-to-edge screens that adapt flawlessly to native Android gesture bars and system insets.
+- **Audiophile DSP Engine:** Built-in Equalizer and Loudness Enhancer with zero-config smart toggles.
+- **Bitrate Badges:** Visually distinguish between LOSSLESS, HIGH-RES, and 320 KBPS audio streams dynamically on the player screen.
+- **Cross-Platform Refinements:** Eliminated heavy C++ ATL dependencies for fast Windows compilation and patched Isar for Web compatibility.
+- **Gapless Playback:** Seamless transitions between tracks using ConcatenatingAudioSource.
+- **Android Home Widget:** Control your music right from the home screen.
+- **Dynamic Theming (Material You):** The app adapts perfectly to the album art of the currently playing track.
+- **Haptic Feedback:** Subtle, premium haptic responses on player controls.
+- **Android Auto Support:** Preparation for automotive integration.
+- **TrollStore iPad Support:** Correctly formatted QR codes for 1-tap installation via iOS/iPadOS camera.
+- **Flawless Playback Cache:** Robust JSON fallback mechanisms that guarantee Recently Played and Queue states resume flawlessly even after hard restarts.
+- **Tablet & Large Screen UI:** Added dynamic side-by-side player layouts, Hero Banners, and authentic glassmorphism for a stunning tablet experience.
+- **Cloudflare Edge Acceleration:** Deployed Phase 1 Cloudflare Worker enhancements including KV caching for zero-latency searches/lyrics, a dynamic Image Proxy cache for CDN acceleration, and robust API Abuse Prevention via the `X-Feels-Secret` HTTP header.
+- **Production CI/CD & Shorebird OTA:** Hardened GitHub Actions pipelines to prevent SDK contamination, secured Firebase environments via Base64 GitHub Secrets, fixed Firestore version tracking for OTA updates, and implemented native UI progress indicators for Shorebird background patches.

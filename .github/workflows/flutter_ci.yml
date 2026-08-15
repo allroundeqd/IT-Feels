@@ -1,0 +1,46 @@
+name: Flutter CI
+
+on:
+  push:
+    branches: [ "main", "feature/*" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Inject Firebase Options
+        run: |
+          mkdir -p lib
+          if [ -n "${{ secrets.FIREBASE_OPTIONS_B64 }}" ]; then
+            echo "${{ secrets.FIREBASE_OPTIONS_B64 }}" | base64 -d > lib/firebase_options.dart
+            echo "Injected Firebase Options from Secret"
+          else
+            echo "Using tracked firebase_options.dart"
+          fi
+
+      - name: Analyze project source
+        run: flutter analyze
+
+      - name: Run tests
+        run: flutter test --coverage
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage/lcov.info
