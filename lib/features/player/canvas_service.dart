@@ -25,7 +25,7 @@ class CanvasControllerNotifier extends StateNotifier<VideoController?> {
     final myToken = ++_canvasGenToken;
     // Clear old
     if (state != null) {
-      await state?.player.pause();
+      await state?.player.stop();
       await state?.player.dispose();
       state = null;
     }

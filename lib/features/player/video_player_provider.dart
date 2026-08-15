@@ -589,7 +589,7 @@ class VideoPlayerNotifier extends Notifier<VideoPlayerState> {
 
         // Probe with proper mpv extras for reliable decoding on Windows
         final extras = <String, String>{
-          'hwdec': Platform.isWindows ? 'auto-copy' : 'auto-safe',
+          'hwdec': 'auto-safe',
           'cache-pause': 'no',
           'demuxer-max-bytes': _bufferSizeForQuality(candidate.quality).toString(),
           'vd-lavc-threads': Platform.numberOfProcessors.clamp(1, 16).toString(),
@@ -845,7 +845,7 @@ class VideoPlayerNotifier extends Notifier<VideoPlayerState> {
     if (state.isHost && state.currentRoomId != null) {
       locator<RoomService>().endRoom(state.currentRoomId!);
     }
-    state.player?.pause();
+    state.player?.stop();
     state.player?.dispose();
     state = state.copyWith(
       isVideoActive: false,
