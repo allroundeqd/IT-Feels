@@ -103,7 +103,7 @@ class NowPlayingProgress extends ConsumerWidget {
 
     return ExcludeSemantics(
       child: StreamBuilder<Duration>(
-        stream: ref.read(audioPlayerProvider.notifier).audioHandler.player.positionStream,
+        stream: ref.read(audioPlayerProvider.notifier).audioHandler.player.stream.position,
         initialData: initialPos,
         builder: (context, snapshot) {
           final currentPos = snapshot.data ?? initialPos;

@@ -27,6 +27,7 @@ class AudioEngineService {
   Duration? get duration => audioHandler.player.state.duration;
   
   Stream<bool> get playerStateStream => audioHandler.player.stream.playing;
+  Stream<bool> get bufferingStream => audioHandler.player.stream.buffering;
   
   Song? currentSong;
   
@@ -143,7 +144,7 @@ class AudioEngineService {
   Future<void> setPlaybackSpeed(double speed) async {
     playbackSpeed = speed;
     if (currentVibe == AudioVibe.normal) {
-      await audioHandler.player.setSpeed(speed);
+      await audioHandler.player.setRate(speed);
       saveAudioSettings();
     }
   }
@@ -161,15 +162,15 @@ class AudioEngineService {
     try {
       switch (vibe) {
         case AudioVibe.slowedReverb:
-          await audioHandler.player.setSpeed(0.85);
+          await audioHandler.player.setRate(0.85);
           await audioHandler.player.setPitch(0.85);
           break;
         case AudioVibe.nightcore:
-          await audioHandler.player.setSpeed(1.25);
+          await audioHandler.player.setRate(1.25);
           await audioHandler.player.setPitch(1.25);
           break;
         case AudioVibe.normal:
-          await audioHandler.player.setSpeed(playbackSpeed);
+          await audioHandler.player.setRate(playbackSpeed);
           await audioHandler.player.setPitch(playbackPitch);
           break;
       }

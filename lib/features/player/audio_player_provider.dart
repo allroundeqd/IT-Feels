@@ -470,8 +470,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     _hasListenedToEvents = true;
 
     // We bind to the Engine's streams which are wrappers over audioHandler
-    _eventSubscriptions.add(engine.playerStateStream.listen((pState) async {
-      final isPlaying = pState?.playing ?? false;
+    _eventSubscriptions.add(engine.playerStateStream.listen((isPlaying) async {
       state = state.copyWith(isPlaying: isPlaying);
       socialSync.updatePresence(state.currentSong, isPlaying);
 
@@ -480,9 +479,9 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       } else {
         _stopAudioSyncHaptics();
       }
+    }));
 
-      final procState = pState?.processingState;
-      final isBuffering = procState == ProcessingState.buffering || procState == ProcessingState.loading;
+    _eventSubscriptions.add(engine.bufferingStream.listen((isBuffering) async {
       if (isBuffering) {
         if (_bufferingTimer == null || !_bufferingTimer!.isActive) {
           _bufferingTimer = Timer(const Duration(milliseconds: 1500), () async {
@@ -509,13 +508,16 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
         _bufferingTimer?.cancel();
         _bufferingTimer = null;
       }
-      if (procState == ProcessingState.completed) {
+    }));
+
+    _eventSubscriptions.add(engine.playbackStateStream.listen((stateData) {
+      if (stateData.processingState == AudioProcessingState.completed) {
         if (!_isHandlingCompletion) {
           _isHandlingCompletion = true;
-          await _handleTrackCompleted();
+          _handleTrackCompleted();
         }
       }
-
+      
       if (state.currentRoomId != null &&
           state.isHost &&
           state.currentSong != null) {
@@ -993,7 +995,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     if (state.currentSong == null) return;
     triggerHaptic(heavy: true);
 
-    if (engine.audioHandler.player.audioSource == null) {
+    if (engine.audioHandler.player.state.playlist.medias.isEmpty) {
       await playSong(
         state.currentSong!,
         queue: state.queue,
