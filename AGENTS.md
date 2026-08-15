@@ -10,6 +10,7 @@ This file tracks major technical decisions, features implemented, and architectu
 > - **ALL UI/OS DEVELOPMENT** must be done HERE in `IT_Feels_Alternate`.
 > - **TO SYNC UPDATES**, instruct the user to run `git pull upstream master` from within the `IT-Feels` directory.
 > - **DO NOT** migrate this Alternate app to `media_kit` unless explicitly requested. It uses `just_audio` by default. Do not copy code blindly from the downstream Hardcoded app!
+> - **DO NOT HARDCODE APIS**: This repository uses a clean `AddonSystemRepository`. Never hardcode `youtube_explode_dart`, Spotify, or Saavn scraping logic directly into this codebase. All music extraction must be delegated dynamically to user-installed Addons to maintain legal compliance!
 
 ## Latest Agent Iteration
 - **Universal Desktop & Mobile OS Integrations (v3.6.8):**
