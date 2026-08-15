@@ -6,7 +6,6 @@ import 'dart:io';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:just_audio/just_audio.dart';
 import 'package:it_feels_music/features/player/active_media_provider.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:vibration/vibration.dart';

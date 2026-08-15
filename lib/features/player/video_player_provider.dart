@@ -372,9 +372,6 @@ class VideoPlayerNotifier extends Notifier<VideoPlayerState> {
   }
 
   Future<void> playVideo(String videoId, String title, String uploader, {String? localPath, String? query, Duration? startPosition, bool isBackgroundHandoff = false, void Function(String)? onToastMessage, bool forceReload = false}) async {
-    // VIDEO DISABLED TEMPORARILY DUE TO NATIVE MEDIA_KIT CRASH
-    return;
-    
     final String originalId = videoId;
     // Check for custom overridden YouTube ID for this song
     final customVideoId = await StorageService.getCustomVideoLink(videoId);

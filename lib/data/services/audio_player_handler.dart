@@ -2,17 +2,16 @@ import 'package:it_feels_music/core/utils/service_locator.dart';
 import 'package:it_feels_music/data/repositories/music_repository.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/foundation.dart';
-import 'package:just_audio/just_audio.dart';
+import 'package:media_kit/media_kit.dart';
 import 'dart:io';
 import 'dart:async';
 import 'package:it_feels_music/data/models/song_model.dart';
 import 'package:smtc_windows/smtc_windows.dart';
 import 'package:it_feels_music/services/storage_service.dart';
+import 'package:it_feels_music/services/database_service.dart';
 
 class AudioPlayerHandler extends BaseAudioHandler with SeekHandler {
-  late final AudioPlayer _player;
-  late final AndroidEqualizer _equalizer;
-  late final AndroidLoudnessEnhancer _loudnessEnhancer;
+  late final Player _player;
   final IMusicRepository apiService;
   
   VoidCallback? onSkipNext;
@@ -21,33 +20,16 @@ class AudioPlayerHandler extends BaseAudioHandler with SeekHandler {
   
   SMTCWindows? _smtc;
   StreamSubscription? _smtcSubscription;
-  StreamSubscription? _playbackEventSubscription;
-  StreamSubscription? _playingSubscription;
 
   AudioPlayerHandler({
     required this.apiService,
-    @visibleForTesting AudioPlayer? customPlayer,
-    @visibleForTesting AndroidEqualizer? customEqualizer,
-    @visibleForTesting AndroidLoudnessEnhancer? customLoudnessEnhancer,
+    @visibleForTesting Player? customPlayer,
   }) {
-    _equalizer = customEqualizer ?? AndroidEqualizer();
-    _loudnessEnhancer = customLoudnessEnhancer ?? AndroidLoudnessEnhancer();
-    _player = customPlayer ?? AudioPlayer(
-      audioPipeline: (!kIsWeb && Platform.isAndroid)
-          ? AudioPipeline(
-              androidAudioEffects: [
-                _equalizer,
-                _loudnessEnhancer,
-              ],
-            )
-          : null,
-    );
+    _player = customPlayer ?? Player();
     _init();
   }
 
-  AudioPlayer get player => _player;
-  AndroidEqualizer get equalizer => _equalizer;
-  AndroidLoudnessEnhancer get loudnessEnhancer => _loudnessEnhancer;
+  Player get player => _player;
 
   void _init() {
     if (!kIsWeb && Platform.isWindows) {
@@ -85,36 +67,36 @@ class AudioPlayerHandler extends BaseAudioHandler with SeekHandler {
           }
         });
       } catch (e) {
-        debugPrint("Failed to init SMTC: $e");
+        debugPrint('[AudioPlayerHandler] Failed to initialize SMTC: $e');
       }
     }
     
-    _playbackEventSubscription = _player.playbackEventStream.listen(_broadcastState);
-    _playingSubscription = _player.playingStream.listen((_) {
-      _broadcastState(_player.playbackEvent);
+    _player.stream.playing.listen((playing) {
+      _broadcastState();
+    });
+    _player.stream.position.listen((pos) {
+      _broadcastState();
+    });
+    _player.stream.completed.listen((completed) {
+      if (completed) {
+        _broadcastState(isCompleted: true);
+      }
+    });
+    _player.stream.buffering.listen((buffering) {
+      _broadcastState(isBuffering: buffering);
     });
   }
 
-  void _broadcastState(PlaybackEvent event) {
-    final playing = _player.playing;
-    final pState = _player.processingState;
-    AudioProcessingState audioProcessingState;
-    switch (pState) {
-      case ProcessingState.idle:
-        audioProcessingState = AudioProcessingState.idle;
-        break;
-      case ProcessingState.loading:
-        audioProcessingState = AudioProcessingState.loading;
-        break;
-      case ProcessingState.buffering:
-        audioProcessingState = AudioProcessingState.buffering;
-        break;
-      case ProcessingState.ready:
-        audioProcessingState = AudioProcessingState.ready;
-        break;
-      case ProcessingState.completed:
-        audioProcessingState = AudioProcessingState.completed;
-        break;
+  void _broadcastState({bool isCompleted = false, bool isBuffering = false}) {
+    final playing = _player.state.playing;
+    
+    AudioProcessingState audioProcessingState = AudioProcessingState.ready;
+    if (isCompleted) {
+      audioProcessingState = AudioProcessingState.completed;
+    } else if (isBuffering) {
+      audioProcessingState = AudioProcessingState.buffering;
+    } else if (playing) {
+      audioProcessingState = AudioProcessingState.ready;
     }
 
     playbackState.add(playbackState.value.copyWith(
@@ -137,10 +119,10 @@ class AudioPlayerHandler extends BaseAudioHandler with SeekHandler {
       androidCompactActionIndices: const [0, 1, 2],
       processingState: audioProcessingState,
       playing: playing,
-      updatePosition: _player.position,
-      bufferedPosition: _player.bufferedPosition,
-      speed: _player.speed,
-      queueIndex: event.currentIndex,
+      updatePosition: _player.state.position,
+      bufferedPosition: _player.state.buffer,
+      speed: _player.state.rate,
+      queueIndex: 0,
     ));
 
     if (_smtc != null) {
@@ -149,12 +131,10 @@ class AudioPlayerHandler extends BaseAudioHandler with SeekHandler {
       try {
         _smtc!.updateTimeline(PlaybackTimeline(
           startTimeMs: 0,
-          endTimeMs: _player.duration?.inMilliseconds ?? 0,
-          positionMs: _player.position.inMilliseconds,
+          endTimeMs: _player.state.duration.inMilliseconds,
+          positionMs: _player.state.position.inMilliseconds,
         ));
-      } catch (e) {
-        debugPrint("Failed to update SMTC timeline: $e");
-      }
+      } catch (e) {}
     }
   }
 
@@ -179,41 +159,28 @@ class AudioPlayerHandler extends BaseAudioHandler with SeekHandler {
         ));
       }
       
-      await _player.stop(); // Flush existing AV pipeline to prevent 00:00 deadlocks
+      await _player.stop();
 
-      if (streamUrl.startsWith('/') || streamUrl.startsWith('file://') || RegExp(r'^[a-zA-Z]:[/\\]').hasMatch(streamUrl)) {
-        final path = streamUrl.startsWith('file://') ? streamUrl.replaceFirst('file://', '') : streamUrl;
-        await _player.setAudioSource(
-          AudioSource.file(path, tag: item),
-          initialPosition: song.playbackPositionMs != null && song.playbackPositionMs! > 0 
-              ? Duration(milliseconds: song.playbackPositionMs!) 
-              : Duration.zero,
-        );
-      } else {
-        await _player.setAudioSource(
-          AudioSource.uri(
-            Uri.parse(streamUrl),
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-              'Accept': '*/*',
-            },
-            tag: item,
-          ),
-          initialPosition: song.playbackPositionMs != null && song.playbackPositionMs! > 0 
-              ? Duration(milliseconds: song.playbackPositionMs!) 
-              : Duration.zero,
-        );
+      final Media media = Media(
+        streamUrl,
+        httpHeaders: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': '*/*',
+        },
+      );
+      
+      await _player.open(media, play: true);
+      
+      if (song.playbackPositionMs != null && song.playbackPositionMs! > 0) {
+        await _player.seek(Duration(milliseconds: song.playbackPositionMs!));
       }
-      _player.play(); // DO NOT AWAIT. just_audio play() returns a future that resolves when the song finishes.
     } catch (e) {
       debugPrint('[AudioPlayerHandler] Error setting stream URL: $e');
     }
   }
 
   @override
-  Future<void> skipToQueueItem(int index) async {
-    // Kept to avoid breaking provider skipToQueueItem calls if any, but provider uses playSong
-  }
+  Future<void> skipToQueueItem(int index) async {}
 
   @override
   Future<void> play() => _player.play();
@@ -237,13 +204,10 @@ class AudioPlayerHandler extends BaseAudioHandler with SeekHandler {
     if (onSkipPrevious != null) onSkipPrevious!();
   }
 
-  // --- Android Auto Integration ---
   @override
   Future<List<MediaItem>> getChildren(String parentMediaId, [Map<String, dynamic>? options]) async {
     final settings = await StorageService.loadSettings();
-    if (settings['enableAndroidAuto'] != true) {
-      return []; // Return empty if Android Auto is disabled
-    }
+    if (settings['enableAndroidAuto'] != true) return [];
 
     if (parentMediaId == AudioService.browsableRootId) {
       return [
@@ -318,7 +282,5 @@ class AudioPlayerHandler extends BaseAudioHandler with SeekHandler {
 
   Future<void> disposeSubscriptions() async {
     await _smtcSubscription?.cancel();
-    await _playbackEventSubscription?.cancel();
-    await _playingSubscription?.cancel();
   }
 }

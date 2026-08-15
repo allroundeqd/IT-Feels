@@ -7,7 +7,6 @@ import 'package:windows_taskbar/windows_taskbar.dart';
 import 'package:it_feels_music/data/models/song_model.dart';
 import 'package:it_feels_music/data/services/audio_player_handler.dart';
 import 'package:it_feels_music/services/storage_service.dart';
-import 'package:just_audio/just_audio.dart';
 import 'package:home_widget/home_widget.dart';
 
 enum AudioVibe {
@@ -20,14 +19,14 @@ class AudioEngineService {
   late AudioPlayerHandler audioHandler;
   
   Stream<PlaybackState> get playbackStateStream => audioHandler.playbackState;
-  Stream<Duration> get positionStream => audioHandler.player.positionStream;
-  Stream<Duration?> get durationStream => audioHandler.player.durationStream;
+  Stream<Duration> get positionStream => audioHandler.player.stream.position;
+  Stream<Duration> get durationStream => audioHandler.player.stream.duration;
   
-  bool get isPlaying => audioHandler.player.playing;
-  Duration get position => audioHandler.player.position;
-  Duration? get duration => audioHandler.player.duration;
+  bool get isPlaying => audioHandler.player.state.playing;
+  Duration get position => audioHandler.player.state.position;
+  Duration? get duration => audioHandler.player.state.duration;
   
-  Stream<PlayerState> get playerStateStream => audioHandler.player.playerStateStream;
+  Stream<bool> get playerStateStream => audioHandler.player.stream.playing;
   
   Song? currentSong;
   
@@ -71,7 +70,7 @@ class AudioEngineService {
           try { WindowsTaskbar.setProgress(pos.inMilliseconds, dur.inMilliseconds).catchError((_) {}); } catch (_) {}
         }
       });
-      _playerStateSub = audioHandler.player.playingStream.listen((playing) {
+      _playerStateSub = audioHandler.player.stream.playing.listen((playing) {
         try {
           _updateWindowsTaskbarThumbnail(playing);
           if (playing) {
@@ -103,7 +102,7 @@ class AudioEngineService {
     try {
       playbackSpeed = settings['speed'] ?? 1.0;
       playbackPitch = settings['pitch'] ?? 1.0;
-      await audioHandler.player.setSpeed(playbackSpeed);
+      await audioHandler.player.setRate(playbackSpeed);
       await audioHandler.player.setPitch(playbackPitch);
 
       isDspEngineEnabled = settings['dspEngine'] ?? false;
