@@ -1027,7 +1027,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   }
 
   Future<void> seek(Duration pos) async {
-    if (state.isCasting) {
+    if (locator<it_feels_music_cast_service.CastService>().isConnected) {
       await locator<it_feels_music_cast_service.CastService>().seek(pos);
     } else {
       await engine.seek(pos);

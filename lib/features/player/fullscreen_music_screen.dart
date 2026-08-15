@@ -136,6 +136,7 @@ class _FullscreenMusicScreenState extends ConsumerState<FullscreenMusicScreen> w
                 );
               },
             ),
+            ),
           ),
           
           // Noise overlay for texture
