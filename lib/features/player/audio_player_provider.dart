@@ -1027,12 +1027,17 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   }
 
   Future<void> seek(Duration pos) async {
-    if (locator<it_feels_music_cast_service.CastService>().isConnected) {
+    if (state.isCasting) {
       await locator<it_feels_music_cast_service.CastService>().seek(pos);
     } else {
       await engine.seek(pos);
+      try {
+        final videoNotifier = ref.read(videoPlayerProvider.notifier);
+        if (videoNotifier.state.isVideoActive && videoNotifier.state.player != null) {
+          videoNotifier.seek(pos);
+        }
+      } catch (_) {}
     }
-
     socialSync.updateRoomState(state.currentSong!, pos, state.isPlaying);
   }
 

@@ -109,7 +109,7 @@ class PaletteExtractor {
       final Uint8List bytes = data.buffer.asUint8List();
       
       // Decode and downsample inside the isolate
-      final ui.Codec codec = await ui.instantiateImageCodec(bytes, targetWidth: 100, targetHeight: 100);
+      final ui.Codec codec = await ui.instantiateImageCodec(bytes, targetWidth: 50, targetHeight: 50);
       final ui.FrameInfo frame = await codec.getNextFrame();
       
       // Use official PaletteGenerator inside isolate
