@@ -68,7 +68,7 @@ class NowPlayingProgress extends ConsumerWidget {
                 activeColor: accentColor,
                 inactiveColor: context.themeTextColor24,
                 onSeek: (newPos) {
-                  videoProvider.player?.seek(newPos);
+                  ref.read(videoPlayerProvider.notifier).seekTo(newPos);
                   final settingsProv = ref.read(settingsProvider);
                   if (!settingsProv.useVideoAudioSource) {
                     ref.read(audioPlayerProvider.notifier).seek(newPos);
