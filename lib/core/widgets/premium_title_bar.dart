@@ -248,11 +248,13 @@ class _PremiumTitleBarState extends ConsumerState<PremiumTitleBar>
     final playerProv = ref.watch(audioPlayerProvider);
     final song = playerProv.currentSong;
 
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 150),
-      child: song != null
-          ? _buildNowPlayingIndicator(song)
-          : _buildGlobalSearch(),
+    return ExcludeSemantics(
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 150),
+        child: song != null
+            ? _buildNowPlayingIndicator(song)
+            : _buildGlobalSearch(),
+      ),
     );
   }
 

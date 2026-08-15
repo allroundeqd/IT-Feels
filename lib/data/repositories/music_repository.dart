@@ -72,7 +72,10 @@ class MusicRepository implements IMusicRepository {
   Future<List<Song>> searchStations(String query) async => [];
 
   @override
-  Future<Map<String, dynamic>> getCharts() async => {'tracks': <Song>[], 'playlists': <Playlist>[]};
+  Future<Map<String, dynamic>> getCharts() async {
+    final addonManager = AddonManager();
+    return await addonManager.getCharts();
+  }
 
   @override
   Future<Map<String, dynamic>> fetchHomepageData({Function(String)? onError}) async {
@@ -84,14 +87,33 @@ class MusicRepository implements IMusicRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> getPlaylistDetails(String token, {int? page, int? count}) async => {'songs': <Song>[]};
-  @override
-  Future<Map<String, dynamic>> fetchPlaylistDetails(String token, {int? page, int? count}) async => {'songs': <Song>[]};
+  Future<Map<String, dynamic>> getPlaylistDetails(String token, {int? page, int? count}) async {
+    final songs = await getPlaylistTracks(token);
+    return {'songs': songs};
+  }
 
   @override
-  Future<Map<String, dynamic>> getAlbumDetails(String token) async => {'songs': <Song>[]};
+  Future<Map<String, dynamic>> fetchPlaylistDetails(String token, {int? page, int? count}) async {
+    final songs = await getPlaylistTracks(token);
+    return {'songs': songs};
+  }
+
   @override
-  Future<Map<String, dynamic>> fetchAlbumDetails(String token) async => {'songs': <Song>[]};
+  Future<Map<String, dynamic>> getAlbumDetails(String token) async {
+    final songs = await getAlbumTracks(token);
+    return {'songs': songs};
+  }
+  
+  @override
+  Future<Map<String, dynamic>> fetchAlbumDetails(String token) async {
+    final songs = await getAlbumTracks(token);
+    return {'songs': songs};
+  }
+
+  Future<List<Song>> getAlbumTracks(String id) async {
+    final addonManager = AddonManager();
+    return await addonManager.getAlbumTracks(id);
+  }
 
   @override
   Future<List<Song>> searchSongs(String query, {int page = 1, int count = 20}) async {
@@ -105,7 +127,10 @@ class MusicRepository implements IMusicRepository {
   Future<List<dynamic>> getTopArtists() async => [];
 
   @override
-  Future<List<Song>> getPlaylistTracks(String id) async => [];
+  Future<List<Song>> getPlaylistTracks(String id) async {
+    final addonManager = AddonManager();
+    return await addonManager.getPlaylistTracks(id);
+  }
 
   @override
   Future<List<Song>> searchPodcasts(String query, {int count = 10}) async {
@@ -200,7 +225,8 @@ class MusicRepository implements IMusicRepository {
     String? album,
     int? duration,
   }) async {
-    return null;
+    final addonManager = AddonManager();
+    return await addonManager.getLyrics(track, artist, album: album, duration: duration);
   }
 
   @override
@@ -214,17 +240,17 @@ class MusicRepository implements IMusicRepository {
     String? query,
     bool bypassCache = false,
   }) async {
-    return await addonManager.getVideoStreams(videoId, query);
+    return await AddonManager().getVideoStreams(videoId, query);
   }
 
   @override
   Future<List<Map<String, dynamic>>> searchVideos(String query) async {
-    return await addonManager.searchVideos(query);
+    return await AddonManager().searchVideos(query);
   }
 
   @override
   Future<List<Map<String, dynamic>>> getTrendingVideos({int limit = 20}) async {
-    return await addonManager.getTrendingVideos();
+    return await AddonManager().getTrendingVideos();
   }
 
   @override
@@ -232,7 +258,7 @@ class MusicRepository implements IMusicRepository {
     String query, {
     int limit = 20,
   }) async {
-    return await addonManager.searchVideos(query);
+    return await AddonManager().searchVideos(query);
   }
 
   @override

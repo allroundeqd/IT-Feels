@@ -38,7 +38,8 @@ class NowPlayingArt extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final videoProvider = ref.watch(videoPlayerProvider);
 
-    return AnimatedSwitcher(
+    return ExcludeSemantics(
+      child: AnimatedSwitcher(
       duration: const Duration(milliseconds: 400),
       switchInCurve: Curves.easeInOut,
       switchOutCurve: Curves.easeInOut,
@@ -319,6 +320,7 @@ class NowPlayingArt extends ConsumerWidget {
                 ),
             ],
           ),
+      ),
     );
   }
 

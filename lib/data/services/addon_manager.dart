@@ -60,7 +60,6 @@ class AddonManager {
         return true;
       }
     } catch (e) {
-    } catch (e) {
       debugPrint('[AddonManager] Error installing plugin from URL: $e');
     }
     return false;
@@ -166,6 +165,58 @@ class AddonManager {
     return allResults;
   }
 
+  Future<List<Song>> getPlaylistTracks(String id) async {
+    List<Song> allResults = [];
+    for (var runtime in _activeRuntimes) {
+      try {
+        final jsResult = runtime.evaluate("typeof getPlaylistTracksUrl === 'function' ? getPlaylistTracksUrl('${id.replaceAll("'", "\\'")}') : null");
+        final searchUrl = jsResult.stringResult.replaceAll('"', '');
+        
+        if (searchUrl != 'null' && searchUrl.isNotEmpty) {
+          debugPrint('[AddonManager] Fetching playlist tracks from: $searchUrl');
+          final response = await http.get(Uri.parse(searchUrl));
+          if (response.statusCode == 200) {
+            final data = jsonDecode(response.body);
+            if (data['success'] == true && data['tracks'] != null) {
+              for (var item in data['tracks']) {
+                allResults.add(Song.fromJson(item));
+              }
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('[AddonManager] getPlaylistTracks error in plugin: $e');
+      }
+    }
+    return allResults;
+  }
+
+  Future<List<Song>> getAlbumTracks(String id) async {
+    List<Song> allResults = [];
+    for (var runtime in _activeRuntimes) {
+      try {
+        final jsResult = runtime.evaluate("typeof getAlbumTracksUrl === 'function' ? getAlbumTracksUrl('${id.replaceAll("'", "\\'")}') : null");
+        final searchUrl = jsResult.stringResult.replaceAll('"', '');
+        
+        if (searchUrl != 'null' && searchUrl.isNotEmpty) {
+          debugPrint('[AddonManager] Fetching album tracks from: $searchUrl');
+          final response = await http.get(Uri.parse(searchUrl));
+          if (response.statusCode == 200) {
+            final data = jsonDecode(response.body);
+            if (data['success'] == true && data['tracks'] != null) {
+              for (var item in data['tracks']) {
+                allResults.add(Song.fromJson(item));
+              }
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('[AddonManager] getAlbumTracks error in plugin: $e');
+      }
+    }
+    return allResults;
+  }
+
   Future<List<Song>> searchPodcasts(String query) async {
     List<Song> allResults = [];
     for (var runtime in _activeRuntimes) {
@@ -197,7 +248,6 @@ class AddonManager {
       } catch (e) {
         debugPrint('[AddonManager] searchPodcasts error in plugin: $e');
       }
-    }
     }
     return allResults;
   }
@@ -245,6 +295,32 @@ class AddonManager {
         }
       } catch (e) {
         debugPrint('[AddonManager] trendingVideos error in plugin: $e');
+      }
+    }
+    return allResults;
+  }
+
+  Future<Map<String, dynamic>> getCharts() async {
+    Map<String, dynamic> allResults = {'tracks': <Song>[], 'playlists': <Playlist>[]};
+    for (var runtime in _activeRuntimes) {
+      try {
+        final jsResult = runtime.evaluate("typeof getChartsUrl === 'function' ? getChartsUrl() : null");
+        final url = jsResult.stringResult.replaceAll('"', '');
+        
+        if (url != 'null' && url.isNotEmpty) {
+          debugPrint('[AddonManager] Fetching charts from: $url');
+          final response = await http.get(Uri.parse(url));
+          if (response.statusCode == 200) {
+            final data = jsonDecode(response.body);
+            if (data['success'] == true && data['data'] != null) {
+              final tracks = (data['data']['tracks'] as List? ?? []).map((e) => Song.fromJson(e)).toList();
+              final playlists = (data['data']['playlists'] as List? ?? []).map((e) => Playlist.fromJson(e)).toList();
+              allResults = {'tracks': tracks, 'playlists': playlists};
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('[AddonManager] getCharts error in plugin: $e');
       }
     }
     return allResults;
@@ -320,6 +396,29 @@ class AddonManager {
         }
       } catch (e) {
         debugPrint('[AddonManager] HomeFeed error in plugin: $e');
+      }
+    }
+    return null;
+  }
+
+  Future<Map<String, dynamic>?> getLyrics(String track, String artist, {String? album, int? duration}) async {
+    for (var runtime in _activeRuntimes) {
+      try {
+        final jsResult = runtime.evaluate("typeof getLyricsUrl === 'function' ? getLyricsUrl('${track.replaceAll("'", "\\'")}', '${artist.replaceAll("'", "\\'")}') : null");
+        final url = jsResult.stringResult.replaceAll('"', '');
+        
+        if (url != 'null' && url.isNotEmpty) {
+          debugPrint('[AddonManager] Fetching lyrics from: $url');
+          final response = await http.get(Uri.parse(url));
+          if (response.statusCode == 200) {
+            final data = jsonDecode(response.body);
+            if (data['success'] == true) {
+              return data['lyrics'];
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('[AddonManager] getLyrics error in plugin: $e');
       }
     }
     return null;

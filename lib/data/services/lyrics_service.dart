@@ -60,26 +60,33 @@ class LyricsService {
     Timer? staticDebounceTimer;
 
     void tryComplete(LyricsResult? res) {
-      // Drop results from previous songs if the user skipped tracks rapidly
       if (sessionId != _currentSessionId) return; 
       
       if (res != null && (res.hasSynced || res.hasStatic)) {
         _lyricsCache[song.id]![res.source] = res;
         
+        // Always yield to onResult so the UI dropdown populates all available providers.
+        // LyricsNotifier's `activeProvider` logic will naturally upgrade from Static to Synced.
         if (res.hasSynced) {
           hasSyncedResult = true;
           staticDebounceTimer?.cancel();
-          onResult(res);
-        } else if (!hasSyncedResult) {
-          // It's a static result. Hold it for 500ms to see if a synced result wins the race.
-          // This prevents UI jitter/flashing from Static -> Synced.
+        }
+        
+        // If we haven't found a synced result yet, delay the static result slightly 
+        // to prevent UI flicker if a synced result is right behind it.
+        if (!res.hasSynced && !hasSyncedResult) {
           pendingStaticResult = res;
           staticDebounceTimer?.cancel();
           staticDebounceTimer = Timer(const Duration(milliseconds: 500), () {
-            if (sessionId == _currentSessionId && !hasSyncedResult && pendingStaticResult != null) {
+            if (sessionId == _currentSessionId && pendingStaticResult != null) {
               onResult(pendingStaticResult!);
             }
           });
+        } else {
+          // If it's a synced result, OR if we already found a synced result 
+          // (meaning the static result arrived late), just yield it immediately 
+          // so it enters the provider list.
+          onResult(res);
         }
       }
     }
@@ -126,7 +133,7 @@ class LyricsService {
           return LyricsResult(
             staticLyrics: staticText,
             syncedLyrics: parsedSynced,
-            source: 'Proxy',
+            source: 'Saavn',
           );
         }
       }

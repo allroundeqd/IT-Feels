@@ -10,6 +10,7 @@ import 'package:it_feels_music/features/player/now_playing_screen.dart';
 import 'package:it_feels_music/features/player/video_player_screen.dart';
 import 'package:it_feels_music/features/social/social_screen.dart';
 import 'package:it_feels_music/features/settings/settings_screen.dart';
+import 'package:it_feels_music/features/settings/audio_settings_screen.dart';
 import 'package:it_feels_music/features/social/room_deep_link_screen.dart';
 import 'package:it_feels_music/features/social/song_deep_link_screen.dart';
 import 'package:it_feels_music/features/social/download_deep_link_screen.dart';
@@ -125,6 +126,13 @@ final GoRouter appRouter = GoRouter(
           ],
         ),
       ],
+    ),
+    GoRoute(
+      path: '/audio_settings',
+      parentNavigatorKey: rootNavigatorKey,
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: AudioSettingsScreen(),
+      ),
     ),
     GoRoute(
       path: '/now_playing',
