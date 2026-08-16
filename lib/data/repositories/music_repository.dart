@@ -139,7 +139,7 @@ class MusicRepository implements IMusicRepository {
 
   @override
   Future<List<Song>> searchPodcasts(String query, {int count = 10}) async {
-    final queryKey = 'search_podcasts_$query';
+    final queryKey = 'search_podcasts_v2_$query';
     final cached = await locator<DatabaseService>().getCachedSearch(queryKey);
     if (cached != null) {
       try {
@@ -185,7 +185,7 @@ class MusicRepository implements IMusicRepository {
 
   @override
   Future<List<Playlist>> searchPlaylists(String query, {int? page, int? count}) async {
-    final queryKey = 'search_playlists_$query';
+    final queryKey = 'search_playlists_v2_$query';
     final cached = await locator<DatabaseService>().getCachedSearch(queryKey);
     if (cached != null) {
       try {
@@ -244,7 +244,7 @@ class MusicRepository implements IMusicRepository {
 
   @override
   Future<List<Song>> search(String query, {int page = 1, int limit = 20}) async {
-    final queryKey = 'search_songs_$query';
+    final queryKey = 'search_songs_v2_$query';
     final cached = await locator<DatabaseService>().getCachedSearch(queryKey);
     if (cached != null) {
       try {
