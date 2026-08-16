@@ -220,6 +220,8 @@ export class SaavnProvider {
       artist = item.artist;
     } else if (item.more_info?.singers) {
       artist = item.more_info.singers;
+    } else if (item.subtitle) {
+      artist = item.subtitle;
     }
 
     const album = item.album || item.more_info?.album || '';

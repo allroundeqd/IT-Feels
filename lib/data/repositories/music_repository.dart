@@ -1,7 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:it_feels_music/core/utils/service_locator.dart';
+import 'package:it_feels_music/data/models/cache_models.dart';
 import 'package:it_feels_music/data/models/song_model.dart';
 import 'package:it_feels_music/data/datasources/local_cache_data_source.dart';
 import 'package:it_feels_music/data/services/addon_manager.dart';
+import 'package:it_feels_music/services/database_service.dart';
 
 abstract class IMusicRepository {
   Future<List<Song>> fetchRecommendations({String? songId, String? artist});
@@ -134,8 +139,29 @@ class MusicRepository implements IMusicRepository {
 
   @override
   Future<List<Song>> searchPodcasts(String query, {int count = 10}) async {
+    final queryKey = 'search_podcasts_$query';
+    final cached = await locator<DatabaseService>().getCachedSearch(queryKey);
+    if (cached != null) {
+      try {
+        final List<dynamic> jsonList = jsonDecode(cached.responseJson);
+        return jsonList.map((e) => Song.fromJson(e as Map<String, dynamic>)).take(count).toList();
+      } catch (e) {
+        debugPrint('[MusicRepository] Failed to parse cached podcasts: $e');
+      }
+    }
+
     final addonManager = AddonManager();
     final results = await addonManager.searchPodcasts(query);
+    
+    if (results.isNotEmpty) {
+      final cacheObj = CachedSearch()
+        ..queryKey = queryKey
+        ..responseJson = jsonEncode(results.map((s) => s.toJson()).toList())
+        ..cachedAt = DateTime.now()
+        ..expiryTime = DateTime.now().add(const Duration(hours: 24));
+      await locator<DatabaseService>().saveCachedSearch(cacheObj);
+    }
+    
     return results.take(count).toList();
   }
 
@@ -159,8 +185,31 @@ class MusicRepository implements IMusicRepository {
 
   @override
   Future<List<Playlist>> searchPlaylists(String query, {int? page, int? count}) async {
+    final queryKey = 'search_playlists_$query';
+    final cached = await locator<DatabaseService>().getCachedSearch(queryKey);
+    if (cached != null) {
+      try {
+        final List<dynamic> jsonList = jsonDecode(cached.responseJson);
+        final results = jsonList.map((e) => Playlist.fromJson(e as Map<String, dynamic>)).toList();
+        if (count != null) return results.take(count).toList();
+        return results;
+      } catch (e) {
+        debugPrint('[MusicRepository] Failed to parse cached playlists: $e');
+      }
+    }
+
     final addonManager = AddonManager();
     final results = await addonManager.searchPlaylists(query);
+    
+    if (results.isNotEmpty) {
+      final cacheObj = CachedSearch()
+        ..queryKey = queryKey
+        ..responseJson = jsonEncode(results.map((p) => p.toJson()).toList())
+        ..cachedAt = DateTime.now()
+        ..expiryTime = DateTime.now().add(const Duration(hours: 24));
+      await locator<DatabaseService>().saveCachedSearch(cacheObj);
+    }
+
     if (count != null) {
       return results.take(count).toList();
     }
@@ -195,9 +244,26 @@ class MusicRepository implements IMusicRepository {
 
   @override
   Future<List<Song>> search(String query, {int page = 1, int limit = 20}) async {
+    final queryKey = 'search_songs_$query';
+    final cached = await locator<DatabaseService>().getCachedSearch(queryKey);
+    if (cached != null) {
+      try {
+        final List<dynamic> jsonList = jsonDecode(cached.responseJson);
+        return jsonList.map((e) => Song.fromJson(e as Map<String, dynamic>)).toList();
+      } catch (e) {
+        debugPrint('[MusicRepository] Failed to parse cached search songs: $e');
+      }
+    }
+
     final addonManager = AddonManager();
     final addonResults = await addonManager.search(query);
     if (addonResults.isNotEmpty) {
+      final cacheObj = CachedSearch()
+        ..queryKey = queryKey
+        ..responseJson = jsonEncode(addonResults.map((s) => s.toJson()).toList())
+        ..cachedAt = DateTime.now()
+        ..expiryTime = DateTime.now().add(const Duration(hours: 24));
+      await locator<DatabaseService>().saveCachedSearch(cacheObj);
       return addonResults;
     }
     

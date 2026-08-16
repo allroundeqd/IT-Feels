@@ -5,6 +5,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:audio_session/audio_session.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:it_feels_music/core/theme/app_typography.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,6 +14,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:it_feels_music/data/repositories/music_repository.dart';
 import 'data/services/audio_player_handler.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 
 import 'package:it_feels_music/core/widgets/dev_toolkit.dart';
@@ -53,7 +55,8 @@ late AudioPlayerHandler _audioHandler;
 late ProviderContainer appProviderContainer;
 
 Future<void> main(List<String> args) async {
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   
   await LocalProxyServer.start();
 
@@ -131,7 +134,6 @@ Future<void> main(List<String> args) async {
   } catch (_) {}
   
   await setupServiceLocator();
-  await AddonManager().initialize();
   
   try {
     MediaKit.ensureInitialized();
@@ -391,10 +393,21 @@ StartupWMClass=it_feels_music
     } catch (_) {}
   }
 
+  await locator.allReady();
+
   runApp(UncontrolledProviderScope(
     container: appProviderContainer,
     child: const PixelPlayerSaavnApp(),
   ));
+
+  // Warm up AddonManager JS engine in background bootstrap so we don't freeze the first frame
+  Future(() async {
+    try {
+      await AddonManager().initialize();
+    } catch (_) {} finally {
+      FlutterNativeSplash.remove();
+    }
+  });
 }
 
 final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
@@ -431,6 +444,14 @@ class PixelPlayerSaavnApp extends ConsumerWidget {
                   colorScheme: colorScheme,
                   scaffoldBackgroundColor: bgColor,
                   textTheme: isLight ? AppTypography.lightTextTheme : AppTypography.darkTextTheme,
+                ),
+                scrollBehavior: const MaterialScrollBehavior().copyWith(
+                  dragDevices: {
+                    PointerDeviceKind.mouse,
+                    PointerDeviceKind.touch,
+                    PointerDeviceKind.stylus,
+                    PointerDeviceKind.trackpad,
+                  },
                 ),
                 themeAnimationDuration: Duration.zero,
                 routerConfig: appRouter,

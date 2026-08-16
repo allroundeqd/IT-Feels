@@ -51,17 +51,22 @@ class _PlaylistDetailScreenState extends ConsumerState<PlaylistDetailScreen> {
 
     Map<String, dynamic> data;
 
-    if (widget.playlist.id.startsWith('dz_')) {
-      final dzApi = locator<IMusicRepository>();
-      final dzId = widget.playlist.id.replaceFirst('dz_', '');
-      data = await dzApi.fetchPlaylistDetails(dzId);
-    } else {
-      final api = locator<IMusicRepository>();
-      if (widget.playlist.type == 'album') {
-        data = await api.fetchAlbumDetails(widget.playlist.id);
+    try {
+      if (widget.playlist.id.startsWith('dz_')) {
+        final dzApi = locator<IMusicRepository>();
+        final dzId = widget.playlist.id.replaceFirst('dz_', '');
+        data = await dzApi.fetchPlaylistDetails(dzId);
       } else {
-        data = await api.fetchPlaylistDetails(widget.playlist.id);
+        final api = locator<IMusicRepository>();
+        if (widget.playlist.type == 'album') {
+          data = await api.fetchAlbumDetails(widget.playlist.id);
+        } else {
+          data = await api.fetchPlaylistDetails(widget.playlist.id);
+        }
       }
+    } catch (e) {
+      debugPrint('Error fetching playlist details: $e');
+      data = {'songs': []};
     }
 
     if (mounted) {

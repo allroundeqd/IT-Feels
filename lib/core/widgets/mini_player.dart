@@ -63,10 +63,13 @@ class MiniPlayer extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(16),
                     child: Builder(
                       builder: (context) {
-                        double blurAmount = 20.0;
-                        if (settings.graphicsQuality == GraphicsQuality.medium) blurAmount = 10.0;
+                        double blurAmount = 12.0;
+                        if (settings.graphicsQuality == GraphicsQuality.medium) blurAmount = 5.0;
                         if (settings.graphicsQuality == GraphicsQuality.low) blurAmount = 0.0;
                         if (kDebugMode) blurAmount = 0.0; // Hot reload performance
+                        if (Theme.of(context).platform == TargetPlatform.android || Theme.of(context).platform == TargetPlatform.iOS) {
+                          blurAmount = blurAmount / 2; // Halve blur on mobile devices for smooth scrolling
+                        }
 
                         final Widget playerContent = Stack(
                           children: [

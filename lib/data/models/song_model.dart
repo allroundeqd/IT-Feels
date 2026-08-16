@@ -42,6 +42,9 @@ class Song {
   @enumerated
   OfflineStatus offlineStatus;
   
+  // Sync Pipeline State
+  bool isDirty;
+  
   // Advanced Search Vector (FTS)
   @Index(type: IndexType.value)
   List<String> searchVector; 
@@ -71,6 +74,7 @@ class Song {
     this.localFilePath,
     this.offlineStatus = OfflineStatus.none,
     this.searchVector = const [],
+    this.isDirty = false,
   });
 
   static String cleanText(String text) {
@@ -96,16 +100,25 @@ class Song {
       rawImage = ImageUtils.getSizedCoverArt(rawImage, size: 500);
     }
 
-    String artistName = 'Unknown Artist';
-    if (json['more_info'] != null && json['more_info']['artistMap'] != null) {
+    String artistName = '';
+    
+    if (json['subtitle'] != null && json['subtitle'].toString().trim().isNotEmpty) {
+      artistName = json['subtitle'].toString().trim();
+    } else if (json['more_info'] != null && json['more_info']['artistMap'] != null) {
       final primary = json['more_info']['artistMap']['primary_artists'];
       if (primary is List && primary.isNotEmpty) {
         artistName = primary.map((x) => x['name'] ?? '').where((x) => x.isNotEmpty).join(', ');
+      } else if (primary is String && primary.isNotEmpty) {
+        artistName = primary;
       }
-    } else if (json['artist'] != null && json['artist'].toString().isNotEmpty) {
-      artistName = json['artist'].toString();
-    } else if (json['more_info'] != null && json['more_info']['singers'] != null) {
-      artistName = json['more_info']['singers'].toString();
+    } else if (json['artist'] != null && json['artist'].toString().trim().isNotEmpty) {
+      artistName = json['artist'].toString().trim();
+    } else if (json['more_info'] != null && json['more_info']['singers'] != null && json['more_info']['singers'].toString().trim().isNotEmpty) {
+      artistName = json['more_info']['singers'].toString().trim();
+    }
+
+    if (artistName.isEmpty || artistName == 'null') {
+      artistName = 'Unknown Artist';
     }
 
     final songTitle = json['title'] ?? json['song'] ?? json['name'] ?? 'Unknown Title';
@@ -142,6 +155,7 @@ class Song {
       isExplicit: json['explicit_content'] == '1' || json['explicit_content'] == 1,
       addedAt: DateTime.now(),
       searchVector: generateSearchVector(cleanTitle, cleanArtist, cleanAlbum),
+      isDirty: false,
     );
   }
 
@@ -158,6 +172,7 @@ class Song {
     int? playbackPositionMs,
     bool? isFavorite,
     DateTime? lastPlayedAt,
+    bool? isDirty,
   }) {
     return Song(
       isarId: isarId,
@@ -184,6 +199,7 @@ class Song {
       localFilePath: localFilePath ?? this.localFilePath,
       offlineStatus: offlineStatus ?? this.offlineStatus,
       searchVector: searchVector,
+      isDirty: isDirty ?? this.isDirty,
     );
   }
 
@@ -211,6 +227,7 @@ class Song {
       'isFavorite': isFavorite,
       'localFilePath': localFilePath,
       'offlineStatus': offlineStatus.index,
+      'isDirty': isDirty,
     };
   }
 }
@@ -224,6 +241,7 @@ class Playlist {
   final int songCount;
   final String type; // 'playlist' or 'album'
   final List<Song>? songs;
+  final String? followerCount;
 
   Playlist({
     required this.id,
@@ -232,6 +250,7 @@ class Playlist {
     required this.songCount,
     this.type = 'playlist',
     this.songs,
+    this.followerCount,
   });
 
   factory Playlist.fromJson(Map<String, dynamic> json) {
@@ -239,14 +258,42 @@ class Playlist {
     if (rawImage.isNotEmpty) {
       rawImage = ImageUtils.getSizedCoverArt(rawImage, size: 500);
     }
+    
+    String? parsedFollowerCount;
+    final fc = json['follower_count'] ?? json['fan_count'] ?? json['play_count'] ?? (json['more_info'] != null ? (json['more_info']['follower_count'] ?? json['more_info']['fan_count']) : null);
+    if (fc != null && fc.toString().isNotEmpty) {
+      try {
+        final double count = double.parse(fc.toString().replaceAll(',', ''));
+        if (count >= 1000000) {
+          parsedFollowerCount = '${(count / 1000000).toStringAsFixed(1).replaceAll(RegExp(r'\.0$'), '')}M';
+        } else if (count >= 1000) {
+          parsedFollowerCount = '${(count / 1000).toStringAsFixed(1).replaceAll(RegExp(r'\.0$'), '')}K';
+        } else {
+          parsedFollowerCount = count.toInt().toString();
+        }
+      } catch (e) {
+        parsedFollowerCount = fc.toString();
+      }
+    }
+
     return Playlist(
       id: json['listid']?.toString() ?? json['id']?.toString() ?? '',
       title: StringUtils.cleanText(json['title']?.toString() ?? json['listname']?.toString() ?? json['name']?.toString() ?? 'Playlist'),
       coverArt: rawImage,
       songCount: int.tryParse(json['list_count']?.toString() ?? json['count']?.toString() ?? '0') ?? 0,
       type: json['type']?.toString() ?? 'playlist',
+      followerCount: parsedFollowerCount,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'title': title,
+    'image': coverArt,
+    'count': songCount,
+    'type': type,
+    'follower_count': followerCount,
+  };
 }
 
 class LyricLine {
@@ -256,4 +303,18 @@ class LyricLine {
   final String? transliteration;
 
   LyricLine({required this.time, required this.text, this.translation, this.transliteration});
+
+  Map<String, dynamic> toJson() => {
+    'timeMs': time.inMilliseconds,
+    'text': text,
+    'translation': translation,
+    'transliteration': transliteration,
+  };
+
+  factory LyricLine.fromJson(Map<String, dynamic> json) => LyricLine(
+    time: Duration(milliseconds: json['timeMs'] as int),
+    text: json['text'] as String,
+    translation: json['translation'] as String?,
+    transliteration: json['transliteration'] as String?,
+  );
 }

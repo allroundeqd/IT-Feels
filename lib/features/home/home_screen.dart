@@ -1104,14 +1104,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
+                                    if (ref.watch(profileProvider).userName.isNotEmpty)
+                                      Text(
+                                        ref.watch(profileProvider).getTimeGreeting(),
+                                        style: GoogleFonts.inter(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: context.themeMutedTextColor,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     Text(
-                                      ref.watch(profileProvider).getGreeting(),
+                                      ref.watch(profileProvider).userName.isNotEmpty
+                                          ? ref.watch(profileProvider).userName
+                                          : ref.watch(profileProvider).getTimeGreeting(),
                                       style: GoogleFonts.outfit(
                                         fontSize: 28,
                                         fontWeight: FontWeight.w800,
                                         color: context.themeTextColor,
                                         letterSpacing: -0.5,
                                       ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ],
                                 ),
@@ -1689,6 +1704,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                            fontSize: 14,
                          ),
                       ),
+                      if (pl.followerCount != null && pl.followerCount!.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          '${pl.followerCount} Feel it',
+                          style: AppTypography.interNormal.copyWith(
+                            color: context.themeTextColor.withOpacity(0.6),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 );

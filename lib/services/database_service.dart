@@ -21,6 +21,8 @@ class DatabaseService {
             existing.songs; // Probe collections
             existing.cachedStreams; 
             existing.cachedPalettes;
+            existing.cachedLyrics;
+            existing.cachedSearchs;
             _isar = existing;
             _isInitialized = true;
             return;
@@ -35,7 +37,7 @@ class DatabaseService {
 
       final dir = await getApplicationDocumentsDirectory();
       final openedIsar = await Isar.open(
-        [SongSchema, CachedStreamSchema, CachedPaletteSchema],
+        [SongSchema, CachedStreamSchema, CachedPaletteSchema, CachedLyricsSchema, CachedSearchSchema],
         directory: dir.path,
         name: _dbName,
         inspector: kDebugMode,
@@ -46,6 +48,8 @@ class DatabaseService {
         openedIsar.songs;
         openedIsar.cachedStreams;
         openedIsar.cachedPalettes;
+        openedIsar.cachedLyrics;
+        openedIsar.cachedSearchs;
         _isar = openedIsar;
         _isInitialized = true;
       } catch (e) {
@@ -251,6 +255,24 @@ class DatabaseService {
     }
   }
 
+  Future<List<Song>> getAllDirtySongs() async {
+    try {
+      await ensureInitialized();
+      if (!isInitialized) return [];
+      return await Isolate.run(() {
+        final isar = Isar.getInstance('it_feels_db');
+        if (isar == null) return <Song>[];
+        return isar.songs
+            .filter()
+            .isDirtyEqualTo(true)
+            .findAllSync();
+      });
+    } catch (e) {
+      debugPrint('[DatabaseService] getAllDirtySongs error: $e');
+      return [];
+    }
+  }
+
   Future<List<Song>> getDownloadedSongs({int offset = 0, int limit = 50}) async {
     try {
       await ensureInitialized();
@@ -332,6 +354,80 @@ class DatabaseService {
     } catch (e) {
       debugPrint('[DatabaseService] getContinueWatching error: $e');
       return [];
+    }
+  }
+
+  // ----------------------------------------------------
+  // Dynamic Cache (Lyrics & Search)
+  // ----------------------------------------------------
+
+  Future<CachedLyrics?> getCachedLyrics(String songId) async {
+    try {
+      await ensureInitialized();
+      if (!isInitialized) return null;
+      final cached = await _isar!.cachedLyrics.where().songIdEqualTo(songId).findFirst();
+      if (cached != null && cached.isExpired) {
+        await _isar!.writeTxn(() async => await _isar!.cachedLyrics.delete(cached.id));
+        return null;
+      }
+      return cached;
+    } catch (e) {
+      debugPrint('[DatabaseService] getCachedLyrics error: $e');
+      return null;
+    }
+  }
+
+  Future<void> saveCachedLyrics(CachedLyrics cache) async {
+    try {
+      await ensureInitialized();
+      if (!isInitialized) return;
+      await _isar!.writeTxn(() async {
+        await _isar!.cachedLyrics.put(cache);
+      });
+    } catch (e) {
+      debugPrint('[DatabaseService] saveCachedLyrics error: $e');
+    }
+  }
+
+  Future<CachedSearch?> getCachedSearch(String queryKey) async {
+    try {
+      await ensureInitialized();
+      if (!isInitialized) return null;
+      final cached = await _isar!.cachedSearchs.where().queryKeyEqualTo(queryKey).findFirst();
+      if (cached != null && cached.isExpired) {
+        await _isar!.writeTxn(() async => await _isar!.cachedSearchs.delete(cached.id));
+        return null;
+      }
+      return cached;
+    } catch (e) {
+      debugPrint('[DatabaseService] getCachedSearch error: $e');
+      return null;
+    }
+  }
+
+  Future<void> saveCachedSearch(CachedSearch cache) async {
+    try {
+      await ensureInitialized();
+      if (!isInitialized) return;
+      await _isar!.writeTxn(() async {
+        await _isar!.cachedSearchs.put(cache);
+      });
+    } catch (e) {
+      debugPrint('[DatabaseService] saveCachedSearch error: $e');
+    }
+  }
+
+  Future<void> cleanExpiredCache() async {
+    try {
+      await ensureInitialized();
+      if (!isInitialized) return;
+      await _isar!.writeTxn(() async {
+        final now = DateTime.now();
+        await _isar!.cachedLyrics.filter().expiryTimeLessThan(now).deleteAll();
+        await _isar!.cachedSearchs.filter().expiryTimeLessThan(now).deleteAll();
+      });
+    } catch (e) {
+      debugPrint('[DatabaseService] cleanExpiredCache error: $e');
     }
   }
 }

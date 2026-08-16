@@ -25,7 +25,7 @@ class AudioPlayerHandler extends BaseAudioHandler with SeekHandler {
     required this.apiService,
     @visibleForTesting Player? customPlayer,
   }) {
-    _player = customPlayer ?? Player();
+    _player = customPlayer ?? Player(configuration: const PlayerConfiguration(pitch: true));
     _init();
   }
 
@@ -165,6 +165,7 @@ class AudioPlayerHandler extends BaseAudioHandler with SeekHandler {
         streamUrl,
         httpHeaders: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Referer': 'https://www.jiosaavn.com/',
           'Accept': '*/*',
         },
       );

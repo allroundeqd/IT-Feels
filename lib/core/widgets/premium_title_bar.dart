@@ -300,7 +300,7 @@ class _PremiumTitleBarState extends ConsumerState<PremiumTitleBar>
               bottom: 0,
               left: 0,
               right: 0,
-              child: _PulsingAudioVisualizer(isFocused: _isFocused),
+              child: ExcludeSemantics(child: _PulsingAudioVisualizer(isFocused: _isFocused)),
             ),
           ],
         ),

@@ -26,6 +26,7 @@ import 'package:it_feels_music/features/cast/cast_service.dart'
 import 'package:it_feels_music/core/providers/riverpod_bridge.dart';
 import 'package:it_feels_music/features/player/palette_extractor_service.dart';
 import 'package:it_feels_music/data/services/audio_engine_service.dart';
+import 'package:it_feels_music/services/cloud_sync_service.dart';
 import 'package:it_feels_music/features/social/listen_together_service.dart';
 
 enum AppThemeMode { dynamic, midnight, burgundy, amoled, materialYou, light, glass }
@@ -715,16 +716,29 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     );
   }
 
-  void toggleFavorite(Song song) {
+  void toggleFavorite(Song song) async {
     triggerHaptic();
     final list = List<Song>.from(state.favoriteSongs);
-    if (state.isFavorite(song.id)) {
+    final isFav = state.isFavorite(song.id);
+    
+    if (isFav) {
       list.removeWhere((s) => s.id == song.id);
     } else {
       list.add(song);
     }
     state = state.copyWith(favoriteSongs: list);
     StorageService.saveFavorites(list);
+
+    // Hybrid Architecture: Also update Isar
+    final dbService = locator<DatabaseService>();
+    final songToSave = song.copyWith(isFavorite: !isFav, isDirty: true);
+    await dbService.saveSong(songToSave);
+
+    // Push Mutation to Cloud (Delta Sync)
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      locator<CloudSyncService>().pushMutation(user.uid, songToSave, isDeleted: isFav); 
+    }
   }
 
   Future<void> _loadFavorites() async {
@@ -761,6 +775,8 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     }
   }
 
+  String? _currentlyFetchingSongId;
+
   Future<void> playSong(
     Song song, {
     List<Song>? queue,
@@ -768,6 +784,11 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     BuildContext? context,
     String? predefinedStreamUrl,
   }) async {
+    if (_currentlyFetchingSongId == song.id) {
+      debugPrint('[AudioPlayerNotifier] Debouncing duplicate play request for ${song.title}');
+      return;
+    }
+
     final currentToken = ++_playSongGenerationToken;
 
     state = state.copyWith(
@@ -908,7 +929,14 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       }
     }
 
-    streamUrl ??= predefinedStreamUrl ?? await locator<IMusicRepository>().getStreamUrl(song);
+    try {
+      _currentlyFetchingSongId = song.id;
+      streamUrl ??= predefinedStreamUrl ?? await locator<IMusicRepository>().getStreamUrl(song);
+    } finally {
+      if (_currentlyFetchingSongId == song.id) {
+        _currentlyFetchingSongId = null;
+      }
+    }
 
     if (currentToken != _playSongGenerationToken) {
       debugPrint('[AudioPlayerNotifier] Stale playSong request cancelled');

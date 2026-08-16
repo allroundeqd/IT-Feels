@@ -66,18 +66,18 @@ dependencies:
   screen_brightness: ^2.1.11
   volume_controller: ^3.6.0
   miniplayer: ^1.0.1
-  firebase_core: ^4.12.1
-  firebase_auth: ^6.5.6
-  cloud_firestore: ^6.7.1
-  firebase_database: ^12.4.6
+  firebase_core: any
+  firebase_auth: any
+  cloud_firestore: any
+  firebase_database: any
   qr_flutter: ^4.1.0
   google_sign_in: ^6.2.2
   purchases_flutter: ^10.6.0
-  firebase_messaging: ^16.4.3
+  firebase_messaging: any
   get_it: ^9.2.1
   flutter_dotenv: ^6.0.1
   logger: ^2.7.0
-  firebase_crashlytics: ^5.2.6
+  firebase_crashlytics: any
   go_router: ^17.3.0
   flutter_riverpod: ^2.6.1
   riverpod_annotation: ^2.6.1
@@ -115,6 +115,7 @@ dependencies:
   translator: ^1.0.4+1
   flutter_js: ^0.8.7
   audio_service_mpris: ^0.2.1
+  flutter_native_splash: ^2.4.8
 dev_dependencies:
   flutter_test:
     sdk: flutter

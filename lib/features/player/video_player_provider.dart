@@ -152,7 +152,10 @@ Future<List<VideoCandidate>> resolvePlayableVideo(
   String targetQuality,
   String audioUrl,
 ) async {
-  final androidHeaders = <String, String>{};
+  final androidHeaders = <String, String>{
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Referer': 'https://www.jiosaavn.com/',
+  };
 
   final candidates = <VideoCandidate>[];
 
@@ -188,7 +191,7 @@ Future<List<VideoCandidate>> resolvePlayableVideo(
           kind: 'videoOnly',
           quality: '$q (proxy)',
           audioUrl: audioUrl.isNotEmpty ? audioUrl : null,
-          headers: {},
+          headers: androidHeaders,
         ));
       } catch (_) {}
     }
@@ -215,7 +218,7 @@ Future<List<VideoCandidate>> resolvePlayableVideo(
         url: proxyUrl,
         kind: 'muxed',
         quality: '$q (proxy)',
-        headers: {},
+        headers: androidHeaders,
       ));
     } catch (_) {}
   }
@@ -240,7 +243,18 @@ class VideoPlayerNotifier extends Notifier<VideoPlayerState> {
   @override
   VideoPlayerState build() {
     _initSystemControls();
-    
+    final config = const PlayerConfiguration(pitch: true, vo: 'gpu');
+    final player = customPlayerFactory?.call(config) ?? Player(configuration: config);
+    final controller = customVideoControllerFactory?.call(player) ?? VideoController(player);
+
+    ref.onDispose(() {
+      _hostSyncTimer?.cancel();
+      _roomSubscription?.cancel();
+      _positionSubscription?.cancel();
+      _trackerSubscription?.cancel();
+      player.dispose();
+    });
+
     // React to external audio player state changes (like Notification/Headset controls)
     ref.listen(audioPlayerProvider, (previous, current) {
       if (previous?.currentSong?.id != current.currentSong?.id && current.currentSong != null) {
@@ -311,21 +325,12 @@ class VideoPlayerNotifier extends Notifier<VideoPlayerState> {
       }
     });
 
-    ref.onDispose(() {
-      _hostSyncTimer?.cancel();
-      _roomSubscription?.cancel();
-      _positionSubscription?.cancel();
-      _trackerSubscription?.cancel();
-      final p = state.player;
-      if (p != null) {
-        try {
-          p.stop();
-          p.dispose();
-        } catch (_) {}
-      }
-    });
     final defaultQuality = ref.read(settingsProvider).defaultVideoQuality;
-    return VideoPlayerState(selectedQuality: defaultQuality);
+    return VideoPlayerState(
+      player: player, 
+      videoController: controller, 
+      selectedQuality: defaultQuality
+    );
   }
 
   Future<void> _initSystemControls() async {
@@ -371,7 +376,7 @@ class VideoPlayerNotifier extends Notifier<VideoPlayerState> {
     _initGuestRoomSync(roomId);
   }
 
-  Future<void> playVideo(String videoId, String title, String uploader, {String? localPath, String? query, Duration? startPosition, bool isBackgroundHandoff = false, void Function(String)? onToastMessage, bool forceReload = false}) async {
+  Future<void> playVideo(String videoId, String title, String uploader, {String? localPath, String? query, Duration? startPosition, bool isBackgroundHandoff = false, void Function(String)? onToastMessage, bool forceReload = false, bool? forceMute}) async {
     final String originalId = videoId;
     // Check for custom overridden YouTube ID for this song
     final customVideoId = await StorageService.getCustomVideoLink(videoId);
@@ -394,13 +399,11 @@ class VideoPlayerNotifier extends Notifier<VideoPlayerState> {
     _recoveryAttempts = 0;
 
     // RESET mute state so videos played from the Video section or Search
-    // always start with audio enabled, regardless of NowPlayingScreen's
-    // previous toggle state.
-    state = state.copyWith(isMuted: false);
+    // always start with audio enabled, unless explicitly overridden.
+    state = state.copyWith(isMuted: forceMute ?? false);
 
-    // EXPLICITLY KILL OLD VIDEO TO PREVENT GLITCH
+    // STOP OLD VIDEO TO PREVENT OVERLAP
     await state.player?.pause();
-    await state.player?.dispose();
 
     // Handoff logic now lives in the UI (NowPlayingScreen) via onVideoStarted callback,
     // so we do not forcefully kill audio_service here. This enables seamless cross-fades!
@@ -417,7 +420,6 @@ class VideoPlayerNotifier extends Notifier<VideoPlayerState> {
       streams: const [],
       audioUrl: '',
       relatedVideos: const [],
-      clearVideoController: true, // Wipe the old controller safely
     );
 
     if (localPath != null && localPath.isNotEmpty) {
@@ -432,11 +434,17 @@ class VideoPlayerNotifier extends Notifier<VideoPlayerState> {
       return;
     }
 
+    // 1. Mark session token to prevent async overlap
+    final currentToken = ++_initStreamGenToken;
+
     // Fetch Stream first for instant playback
     final streamData = await BackendApiService.getVideoStreams(videoId, query: query);
     
-    // ABORT if the user changed songs while we were fetching the streams!
-    if (state.currentVideoId != videoId) return;
+    // ABORT if the user changed songs or closed the video while we were fetching!
+    if (currentToken != _initStreamGenToken || !state.isVideoActive || state.currentVideoId != videoId) {
+      debugPrint('[VideoPlayerNotifier] playVideo aborted due to stale request or closed video.');
+      return;
+    }
 
     final streamList = List<Map<String, dynamic>>.from(streamData['streams'] ?? []);
     final audioUrl = streamData['audioUrl'] as String? ?? '';
@@ -471,29 +479,26 @@ class VideoPlayerNotifier extends Notifier<VideoPlayerState> {
 
   Future<void> _initPlayerWithFile(String localPath, {Duration? startPosition}) async {
     try {
-      await state.player?.dispose();
-      
-
-      
-      final config = const PlayerConfiguration(pitch: false, vo: 'gpu', bufferSize: 64 * 1024 * 1024);
-      final player = customPlayerFactory?.call(config) ?? Player(configuration: config);
-      final controller = customVideoControllerFactory?.call(player) ?? VideoController(player);
+      await state.player?.pause();
       
       final media = Media(
         localPath,
+        httpHeaders: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        },
         extras: {
           'vd-lavc-threads': Platform.numberOfProcessors.toString(),
           'hwdec': Platform.isWindows ? 'auto-copy' : 'auto',
         },
       );
       
-      await player.open(media, play: true);
-      await player.setRate(state.playbackSpeed);
+      
+      await state.player!.open(media, play: true);
+      await state.player!.setRate(state.playbackSpeed);
       
       if (startPosition != null) {
-        await player.seek(startPosition);
+        await state.player!.seek(startPosition);
       }
-      state = state.copyWith(player: player, videoController: controller);
     } catch (e) {
       debugPrint('[VideoPlayerNotifier] Error playing offline file: $e');
     }
@@ -532,17 +537,8 @@ class VideoPlayerNotifier extends Notifier<VideoPlayerState> {
       return;
     }
 
-    Player player;
-    VideoController controller;
-    if (state.player != null && state.videoController != null) {
-      player = state.player!;
-      controller = state.videoController!;
-    } else {
-      final config = const PlayerConfiguration(pitch: false, vo: 'gpu');
-      player = customPlayerFactory?.call(config) ?? Player(configuration: config);
-      controller = customVideoControllerFactory?.call(player) ?? VideoController(player);
-      state = state.copyWith(player: player, videoController: controller);
-    }
+    Player player = state.player!;
+    VideoController controller = state.videoController!;
 
     bool probeSuccess = false;
     VideoCandidate? successfulCandidate;
@@ -621,12 +617,12 @@ class VideoPlayerNotifier extends Notifier<VideoPlayerState> {
           break;
         } else {
           debugPrint('[Video] fallback=>advancing to next candidate');
-          await player.stop();
+          try { await player.stop(); } catch (_) {}
         }
       } catch (e) {
         debugPrint('[Video] failure type=$e candidate=${_redactUrl(candidate.url, candidate.quality, candidate.kind)}');
         debugPrint('[Video] fallback=>advancing to next candidate');
-        await player.stop();
+        try { await player.stop(); } catch (_) {}
       }
     }
 
@@ -648,9 +644,11 @@ class VideoPlayerNotifier extends Notifier<VideoPlayerState> {
       videoUnavailable: false,
     );
 
-    // Ensure videoOnly streams are muted to prevent dual-audio with just_audio
-    if (candidate.kind == 'videoOnly') {
+    // Ensure videoOnly streams and explicitly muted streams are muted to prevent dual-audio
+    if (candidate.kind == 'videoOnly' || state.isMuted) {
       await player.setVolume(0.0);
+    } else {
+      await player.setVolume(100.0);
     }
 
     await player.play();
@@ -663,7 +661,7 @@ class VideoPlayerNotifier extends Notifier<VideoPlayerState> {
       await player.seek(clampedPos);
     }
 
-    if (candidate.kind == 'muxed') {
+    if (candidate.kind == 'muxed' && !state.isMuted) {
       try {
         final audioNotifier = ref.read(audioPlayerProvider.notifier);
         audioNotifier.pause();
@@ -851,15 +849,19 @@ class VideoPlayerNotifier extends Notifier<VideoPlayerState> {
     _roomSubscription?.cancel();
     _positionSubscription?.cancel();
     _trackerSubscription?.cancel();
+    
+    // Invalidate any pending network requests by incrementing the token
+    _initStreamGenToken++;
+    
     if (state.isHost && state.currentRoomId != null) {
       locator<RoomService>().endRoom(state.currentRoomId!);
     }
     state.player?.stop();
-    state.player?.dispose();
+    // Do NOT dispose the player or clear the controller, as they are singletons tied to this Notifier
     state = state.copyWith(
       isVideoActive: false,
-      clearVideoController: true,
       clearRoom: true,
+      currentVideoId: '', // Explicitly clear the ID to prevent lingering state
     );
   }
 

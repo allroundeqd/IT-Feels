@@ -1,11 +1,26 @@
+import 'package:flutter/services.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
+// MUST be a top-level function. MUST have this pragma.
+@pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // Handle background messages here if needed
-  debugPrint("Handling a background message: ${message.messageId}");
+  // 1. Initialize the communication bridge for the background isolate
+  final RootIsolateToken? token = RootIsolateToken.instance;
+  if (token != null) {
+    BackgroundIsolateBinaryMessenger.ensureInitialized(token);
+  }
+
+  // 2. Initialize Firebase inside this specific isolate
+  await Firebase.initializeApp();
+
+  debugPrint("Handling background FCM: ${message.messageId}");
+  
+  // WARNING: Do NOT use your main GetIt locator here. 
+  // Background isolates do not share memory with the main app isolate.
 }
 
 class NotificationService {

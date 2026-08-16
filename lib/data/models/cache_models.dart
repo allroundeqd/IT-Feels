@@ -39,3 +39,36 @@ class CachedPalette {
 
   late DateTime cachedAt;
 }
+
+@collection
+class CachedLyrics {
+  Id id = Isar.autoIncrement;
+
+  @Index(unique: true, replace: true)
+  late String songId;
+
+  String? staticLyrics;
+  
+  late String syncedLyricsJson; // Serialized list of LyricLine
+  late String source;
+
+  late DateTime cachedAt;
+  late DateTime expiryTime;
+
+  bool get isExpired => DateTime.now().isAfter(expiryTime);
+}
+
+@collection
+class CachedSearch {
+  Id id = Isar.autoIncrement;
+
+  @Index(unique: true, replace: true)
+  late String queryKey;
+
+  late String responseJson; // Serialized list of Song or Playlist
+
+  late DateTime cachedAt;
+  late DateTime expiryTime;
+
+  bool get isExpired => DateTime.now().isAfter(expiryTime);
+}

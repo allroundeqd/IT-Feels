@@ -2559,3 +2559,2376 @@ extension CachedPaletteQueryProperty
     });
   }
 }
+
+// coverage:ignore-file
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+
+extension GetCachedLyricsCollection on Isar {
+  IsarCollection<CachedLyrics> get cachedLyrics => this.collection();
+}
+
+const CachedLyricsSchema = CollectionSchema(
+  name: r'CachedLyrics',
+  id: -7015605693997124688,
+  properties: {
+    r'cachedAt': PropertySchema(
+      id: 0,
+      name: r'cachedAt',
+      type: IsarType.dateTime,
+    ),
+    r'expiryTime': PropertySchema(
+      id: 1,
+      name: r'expiryTime',
+      type: IsarType.dateTime,
+    ),
+    r'isExpired': PropertySchema(
+      id: 2,
+      name: r'isExpired',
+      type: IsarType.bool,
+    ),
+    r'songId': PropertySchema(
+      id: 3,
+      name: r'songId',
+      type: IsarType.string,
+    ),
+    r'source': PropertySchema(
+      id: 4,
+      name: r'source',
+      type: IsarType.string,
+    ),
+    r'staticLyrics': PropertySchema(
+      id: 5,
+      name: r'staticLyrics',
+      type: IsarType.string,
+    ),
+    r'syncedLyricsJson': PropertySchema(
+      id: 6,
+      name: r'syncedLyricsJson',
+      type: IsarType.string,
+    )
+  },
+  estimateSize: _cachedLyricsEstimateSize,
+  serialize: _cachedLyricsSerialize,
+  deserialize: _cachedLyricsDeserialize,
+  deserializeProp: _cachedLyricsDeserializeProp,
+  idName: r'id',
+  indexes: {
+    r'songId': IndexSchema(
+      id: -4588889454650216128,
+      name: r'songId',
+      unique: true,
+      replace: true,
+      properties: [
+        IndexPropertySchema(
+          name: r'songId',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    )
+  },
+  links: {},
+  embeddedSchemas: {},
+  getId: _cachedLyricsGetId,
+  getLinks: _cachedLyricsGetLinks,
+  attach: _cachedLyricsAttach,
+  version: '3.1.0+1',
+);
+
+int _cachedLyricsEstimateSize(
+  CachedLyrics object,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  var bytesCount = offsets.last;
+  bytesCount += 3 + object.songId.length * 3;
+  bytesCount += 3 + object.source.length * 3;
+  {
+    final value = object.staticLyrics;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  bytesCount += 3 + object.syncedLyricsJson.length * 3;
+  return bytesCount;
+}
+
+void _cachedLyricsSerialize(
+  CachedLyrics object,
+  IsarWriter writer,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  writer.writeDateTime(offsets[0], object.cachedAt);
+  writer.writeDateTime(offsets[1], object.expiryTime);
+  writer.writeBool(offsets[2], object.isExpired);
+  writer.writeString(offsets[3], object.songId);
+  writer.writeString(offsets[4], object.source);
+  writer.writeString(offsets[5], object.staticLyrics);
+  writer.writeString(offsets[6], object.syncedLyricsJson);
+}
+
+CachedLyrics _cachedLyricsDeserialize(
+  Id id,
+  IsarReader reader,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  final object = CachedLyrics();
+  object.cachedAt = reader.readDateTime(offsets[0]);
+  object.expiryTime = reader.readDateTime(offsets[1]);
+  object.id = id;
+  object.songId = reader.readString(offsets[3]);
+  object.source = reader.readString(offsets[4]);
+  object.staticLyrics = reader.readStringOrNull(offsets[5]);
+  object.syncedLyricsJson = reader.readString(offsets[6]);
+  return object;
+}
+
+P _cachedLyricsDeserializeProp<P>(
+  IsarReader reader,
+  int propertyId,
+  int offset,
+  Map<Type, List<int>> allOffsets,
+) {
+  switch (propertyId) {
+    case 0:
+      return (reader.readDateTime(offset)) as P;
+    case 1:
+      return (reader.readDateTime(offset)) as P;
+    case 2:
+      return (reader.readBool(offset)) as P;
+    case 3:
+      return (reader.readString(offset)) as P;
+    case 4:
+      return (reader.readString(offset)) as P;
+    case 5:
+      return (reader.readStringOrNull(offset)) as P;
+    case 6:
+      return (reader.readString(offset)) as P;
+    default:
+      throw IsarError('Unknown property with id $propertyId');
+  }
+}
+
+Id _cachedLyricsGetId(CachedLyrics object) {
+  return object.id;
+}
+
+List<IsarLinkBase<dynamic>> _cachedLyricsGetLinks(CachedLyrics object) {
+  return [];
+}
+
+void _cachedLyricsAttach(
+    IsarCollection<dynamic> col, Id id, CachedLyrics object) {
+  object.id = id;
+}
+
+extension CachedLyricsByIndex on IsarCollection<CachedLyrics> {
+  Future<CachedLyrics?> getBySongId(String songId) {
+    return getByIndex(r'songId', [songId]);
+  }
+
+  CachedLyrics? getBySongIdSync(String songId) {
+    return getByIndexSync(r'songId', [songId]);
+  }
+
+  Future<bool> deleteBySongId(String songId) {
+    return deleteByIndex(r'songId', [songId]);
+  }
+
+  bool deleteBySongIdSync(String songId) {
+    return deleteByIndexSync(r'songId', [songId]);
+  }
+
+  Future<List<CachedLyrics?>> getAllBySongId(List<String> songIdValues) {
+    final values = songIdValues.map((e) => [e]).toList();
+    return getAllByIndex(r'songId', values);
+  }
+
+  List<CachedLyrics?> getAllBySongIdSync(List<String> songIdValues) {
+    final values = songIdValues.map((e) => [e]).toList();
+    return getAllByIndexSync(r'songId', values);
+  }
+
+  Future<int> deleteAllBySongId(List<String> songIdValues) {
+    final values = songIdValues.map((e) => [e]).toList();
+    return deleteAllByIndex(r'songId', values);
+  }
+
+  int deleteAllBySongIdSync(List<String> songIdValues) {
+    final values = songIdValues.map((e) => [e]).toList();
+    return deleteAllByIndexSync(r'songId', values);
+  }
+
+  Future<Id> putBySongId(CachedLyrics object) {
+    return putByIndex(r'songId', object);
+  }
+
+  Id putBySongIdSync(CachedLyrics object, {bool saveLinks = true}) {
+    return putByIndexSync(r'songId', object, saveLinks: saveLinks);
+  }
+
+  Future<List<Id>> putAllBySongId(List<CachedLyrics> objects) {
+    return putAllByIndex(r'songId', objects);
+  }
+
+  List<Id> putAllBySongIdSync(List<CachedLyrics> objects,
+      {bool saveLinks = true}) {
+    return putAllByIndexSync(r'songId', objects, saveLinks: saveLinks);
+  }
+}
+
+extension CachedLyricsQueryWhereSort
+    on QueryBuilder<CachedLyrics, CachedLyrics, QWhere> {
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterWhere> anyId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+}
+
+extension CachedLyricsQueryWhere
+    on QueryBuilder<CachedLyrics, CachedLyrics, QWhereClause> {
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterWhereClause> idEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(
+        lower: id,
+        upper: id,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterWhereClause> idNotEqualTo(
+      Id id) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            )
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            )
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterWhereClause> idGreaterThan(
+      Id id,
+      {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.greaterThan(lower: id, includeLower: include),
+      );
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterWhereClause> idLessThan(Id id,
+      {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.lessThan(upper: id, includeUpper: include),
+      );
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterWhereClause> idBetween(
+    Id lowerId,
+    Id upperId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(
+        lower: lowerId,
+        includeLower: includeLower,
+        upper: upperId,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterWhereClause> songIdEqualTo(
+      String songId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'songId',
+        value: [songId],
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterWhereClause> songIdNotEqualTo(
+      String songId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'songId',
+              lower: [],
+              upper: [songId],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'songId',
+              lower: [songId],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'songId',
+              lower: [songId],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'songId',
+              lower: [],
+              upper: [songId],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+}
+
+extension CachedLyricsQueryFilter
+    on QueryBuilder<CachedLyrics, CachedLyrics, QFilterCondition> {
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      cachedAtEqualTo(DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'cachedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      cachedAtGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'cachedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      cachedAtLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'cachedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      cachedAtBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'cachedAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      expiryTimeEqualTo(DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'expiryTime',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      expiryTimeGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'expiryTime',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      expiryTimeLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'expiryTime',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      expiryTimeBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'expiryTime',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition> idEqualTo(
+      Id value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition> idGreaterThan(
+    Id value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition> idLessThan(
+    Id value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition> idBetween(
+    Id lower,
+    Id upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      isExpiredEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isExpired',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition> songIdEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'songId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      songIdGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'songId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      songIdLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'songId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition> songIdBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'songId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      songIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'songId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      songIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'songId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      songIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'songId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition> songIdMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'songId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      songIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'songId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      songIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'songId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition> sourceEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'source',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      sourceGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'source',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      sourceLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'source',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition> sourceBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'source',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      sourceStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'source',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      sourceEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'source',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      sourceContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'source',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition> sourceMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'source',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      sourceIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'source',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      sourceIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'source',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      staticLyricsIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'staticLyrics',
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      staticLyricsIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'staticLyrics',
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      staticLyricsEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'staticLyrics',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      staticLyricsGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'staticLyrics',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      staticLyricsLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'staticLyrics',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      staticLyricsBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'staticLyrics',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      staticLyricsStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'staticLyrics',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      staticLyricsEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'staticLyrics',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      staticLyricsContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'staticLyrics',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      staticLyricsMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'staticLyrics',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      staticLyricsIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'staticLyrics',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      staticLyricsIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'staticLyrics',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      syncedLyricsJsonEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'syncedLyricsJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      syncedLyricsJsonGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'syncedLyricsJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      syncedLyricsJsonLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'syncedLyricsJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      syncedLyricsJsonBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'syncedLyricsJson',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      syncedLyricsJsonStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'syncedLyricsJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      syncedLyricsJsonEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'syncedLyricsJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      syncedLyricsJsonContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'syncedLyricsJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      syncedLyricsJsonMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'syncedLyricsJson',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      syncedLyricsJsonIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'syncedLyricsJson',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterFilterCondition>
+      syncedLyricsJsonIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'syncedLyricsJson',
+        value: '',
+      ));
+    });
+  }
+}
+
+extension CachedLyricsQueryObject
+    on QueryBuilder<CachedLyrics, CachedLyrics, QFilterCondition> {}
+
+extension CachedLyricsQueryLinks
+    on QueryBuilder<CachedLyrics, CachedLyrics, QFilterCondition> {}
+
+extension CachedLyricsQuerySortBy
+    on QueryBuilder<CachedLyrics, CachedLyrics, QSortBy> {
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterSortBy> sortByCachedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cachedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterSortBy> sortByCachedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cachedAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterSortBy> sortByExpiryTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'expiryTime', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterSortBy>
+      sortByExpiryTimeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'expiryTime', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterSortBy> sortByIsExpired() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isExpired', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterSortBy> sortByIsExpiredDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isExpired', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterSortBy> sortBySongId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'songId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterSortBy> sortBySongIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'songId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterSortBy> sortBySource() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'source', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterSortBy> sortBySourceDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'source', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterSortBy> sortByStaticLyrics() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'staticLyrics', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterSortBy>
+      sortByStaticLyricsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'staticLyrics', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterSortBy>
+      sortBySyncedLyricsJson() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'syncedLyricsJson', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterSortBy>
+      sortBySyncedLyricsJsonDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'syncedLyricsJson', Sort.desc);
+    });
+  }
+}
+
+extension CachedLyricsQuerySortThenBy
+    on QueryBuilder<CachedLyrics, CachedLyrics, QSortThenBy> {
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterSortBy> thenByCachedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cachedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterSortBy> thenByCachedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cachedAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterSortBy> thenByExpiryTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'expiryTime', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterSortBy>
+      thenByExpiryTimeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'expiryTime', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterSortBy> thenById() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterSortBy> thenByIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterSortBy> thenByIsExpired() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isExpired', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterSortBy> thenByIsExpiredDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isExpired', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterSortBy> thenBySongId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'songId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterSortBy> thenBySongIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'songId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterSortBy> thenBySource() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'source', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterSortBy> thenBySourceDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'source', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterSortBy> thenByStaticLyrics() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'staticLyrics', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterSortBy>
+      thenByStaticLyricsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'staticLyrics', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterSortBy>
+      thenBySyncedLyricsJson() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'syncedLyricsJson', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QAfterSortBy>
+      thenBySyncedLyricsJsonDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'syncedLyricsJson', Sort.desc);
+    });
+  }
+}
+
+extension CachedLyricsQueryWhereDistinct
+    on QueryBuilder<CachedLyrics, CachedLyrics, QDistinct> {
+  QueryBuilder<CachedLyrics, CachedLyrics, QDistinct> distinctByCachedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'cachedAt');
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QDistinct> distinctByExpiryTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'expiryTime');
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QDistinct> distinctByIsExpired() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isExpired');
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QDistinct> distinctBySongId(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'songId', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QDistinct> distinctBySource(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'source', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QDistinct> distinctByStaticLyrics(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'staticLyrics', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<CachedLyrics, CachedLyrics, QDistinct>
+      distinctBySyncedLyricsJson({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'syncedLyricsJson',
+          caseSensitive: caseSensitive);
+    });
+  }
+}
+
+extension CachedLyricsQueryProperty
+    on QueryBuilder<CachedLyrics, CachedLyrics, QQueryProperty> {
+  QueryBuilder<CachedLyrics, int, QQueryOperations> idProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<CachedLyrics, DateTime, QQueryOperations> cachedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'cachedAt');
+    });
+  }
+
+  QueryBuilder<CachedLyrics, DateTime, QQueryOperations> expiryTimeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'expiryTime');
+    });
+  }
+
+  QueryBuilder<CachedLyrics, bool, QQueryOperations> isExpiredProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isExpired');
+    });
+  }
+
+  QueryBuilder<CachedLyrics, String, QQueryOperations> songIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'songId');
+    });
+  }
+
+  QueryBuilder<CachedLyrics, String, QQueryOperations> sourceProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'source');
+    });
+  }
+
+  QueryBuilder<CachedLyrics, String?, QQueryOperations> staticLyricsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'staticLyrics');
+    });
+  }
+
+  QueryBuilder<CachedLyrics, String, QQueryOperations>
+      syncedLyricsJsonProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'syncedLyricsJson');
+    });
+  }
+}
+
+// coverage:ignore-file
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+
+extension GetCachedSearchCollection on Isar {
+  IsarCollection<CachedSearch> get cachedSearchs => this.collection();
+}
+
+const CachedSearchSchema = CollectionSchema(
+  name: r'CachedSearch',
+  id: 8365165518737384268,
+  properties: {
+    r'cachedAt': PropertySchema(
+      id: 0,
+      name: r'cachedAt',
+      type: IsarType.dateTime,
+    ),
+    r'expiryTime': PropertySchema(
+      id: 1,
+      name: r'expiryTime',
+      type: IsarType.dateTime,
+    ),
+    r'isExpired': PropertySchema(
+      id: 2,
+      name: r'isExpired',
+      type: IsarType.bool,
+    ),
+    r'queryKey': PropertySchema(
+      id: 3,
+      name: r'queryKey',
+      type: IsarType.string,
+    ),
+    r'responseJson': PropertySchema(
+      id: 4,
+      name: r'responseJson',
+      type: IsarType.string,
+    )
+  },
+  estimateSize: _cachedSearchEstimateSize,
+  serialize: _cachedSearchSerialize,
+  deserialize: _cachedSearchDeserialize,
+  deserializeProp: _cachedSearchDeserializeProp,
+  idName: r'id',
+  indexes: {
+    r'queryKey': IndexSchema(
+      id: 1924554350003761257,
+      name: r'queryKey',
+      unique: true,
+      replace: true,
+      properties: [
+        IndexPropertySchema(
+          name: r'queryKey',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    )
+  },
+  links: {},
+  embeddedSchemas: {},
+  getId: _cachedSearchGetId,
+  getLinks: _cachedSearchGetLinks,
+  attach: _cachedSearchAttach,
+  version: '3.1.0+1',
+);
+
+int _cachedSearchEstimateSize(
+  CachedSearch object,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  var bytesCount = offsets.last;
+  bytesCount += 3 + object.queryKey.length * 3;
+  bytesCount += 3 + object.responseJson.length * 3;
+  return bytesCount;
+}
+
+void _cachedSearchSerialize(
+  CachedSearch object,
+  IsarWriter writer,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  writer.writeDateTime(offsets[0], object.cachedAt);
+  writer.writeDateTime(offsets[1], object.expiryTime);
+  writer.writeBool(offsets[2], object.isExpired);
+  writer.writeString(offsets[3], object.queryKey);
+  writer.writeString(offsets[4], object.responseJson);
+}
+
+CachedSearch _cachedSearchDeserialize(
+  Id id,
+  IsarReader reader,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  final object = CachedSearch();
+  object.cachedAt = reader.readDateTime(offsets[0]);
+  object.expiryTime = reader.readDateTime(offsets[1]);
+  object.id = id;
+  object.queryKey = reader.readString(offsets[3]);
+  object.responseJson = reader.readString(offsets[4]);
+  return object;
+}
+
+P _cachedSearchDeserializeProp<P>(
+  IsarReader reader,
+  int propertyId,
+  int offset,
+  Map<Type, List<int>> allOffsets,
+) {
+  switch (propertyId) {
+    case 0:
+      return (reader.readDateTime(offset)) as P;
+    case 1:
+      return (reader.readDateTime(offset)) as P;
+    case 2:
+      return (reader.readBool(offset)) as P;
+    case 3:
+      return (reader.readString(offset)) as P;
+    case 4:
+      return (reader.readString(offset)) as P;
+    default:
+      throw IsarError('Unknown property with id $propertyId');
+  }
+}
+
+Id _cachedSearchGetId(CachedSearch object) {
+  return object.id;
+}
+
+List<IsarLinkBase<dynamic>> _cachedSearchGetLinks(CachedSearch object) {
+  return [];
+}
+
+void _cachedSearchAttach(
+    IsarCollection<dynamic> col, Id id, CachedSearch object) {
+  object.id = id;
+}
+
+extension CachedSearchByIndex on IsarCollection<CachedSearch> {
+  Future<CachedSearch?> getByQueryKey(String queryKey) {
+    return getByIndex(r'queryKey', [queryKey]);
+  }
+
+  CachedSearch? getByQueryKeySync(String queryKey) {
+    return getByIndexSync(r'queryKey', [queryKey]);
+  }
+
+  Future<bool> deleteByQueryKey(String queryKey) {
+    return deleteByIndex(r'queryKey', [queryKey]);
+  }
+
+  bool deleteByQueryKeySync(String queryKey) {
+    return deleteByIndexSync(r'queryKey', [queryKey]);
+  }
+
+  Future<List<CachedSearch?>> getAllByQueryKey(List<String> queryKeyValues) {
+    final values = queryKeyValues.map((e) => [e]).toList();
+    return getAllByIndex(r'queryKey', values);
+  }
+
+  List<CachedSearch?> getAllByQueryKeySync(List<String> queryKeyValues) {
+    final values = queryKeyValues.map((e) => [e]).toList();
+    return getAllByIndexSync(r'queryKey', values);
+  }
+
+  Future<int> deleteAllByQueryKey(List<String> queryKeyValues) {
+    final values = queryKeyValues.map((e) => [e]).toList();
+    return deleteAllByIndex(r'queryKey', values);
+  }
+
+  int deleteAllByQueryKeySync(List<String> queryKeyValues) {
+    final values = queryKeyValues.map((e) => [e]).toList();
+    return deleteAllByIndexSync(r'queryKey', values);
+  }
+
+  Future<Id> putByQueryKey(CachedSearch object) {
+    return putByIndex(r'queryKey', object);
+  }
+
+  Id putByQueryKeySync(CachedSearch object, {bool saveLinks = true}) {
+    return putByIndexSync(r'queryKey', object, saveLinks: saveLinks);
+  }
+
+  Future<List<Id>> putAllByQueryKey(List<CachedSearch> objects) {
+    return putAllByIndex(r'queryKey', objects);
+  }
+
+  List<Id> putAllByQueryKeySync(List<CachedSearch> objects,
+      {bool saveLinks = true}) {
+    return putAllByIndexSync(r'queryKey', objects, saveLinks: saveLinks);
+  }
+}
+
+extension CachedSearchQueryWhereSort
+    on QueryBuilder<CachedSearch, CachedSearch, QWhere> {
+  QueryBuilder<CachedSearch, CachedSearch, QAfterWhere> anyId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+}
+
+extension CachedSearchQueryWhere
+    on QueryBuilder<CachedSearch, CachedSearch, QWhereClause> {
+  QueryBuilder<CachedSearch, CachedSearch, QAfterWhereClause> idEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(
+        lower: id,
+        upper: id,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterWhereClause> idNotEqualTo(
+      Id id) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            )
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            )
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterWhereClause> idGreaterThan(
+      Id id,
+      {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.greaterThan(lower: id, includeLower: include),
+      );
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterWhereClause> idLessThan(Id id,
+      {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.lessThan(upper: id, includeUpper: include),
+      );
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterWhereClause> idBetween(
+    Id lowerId,
+    Id upperId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(
+        lower: lowerId,
+        includeLower: includeLower,
+        upper: upperId,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterWhereClause> queryKeyEqualTo(
+      String queryKey) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'queryKey',
+        value: [queryKey],
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterWhereClause>
+      queryKeyNotEqualTo(String queryKey) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'queryKey',
+              lower: [],
+              upper: [queryKey],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'queryKey',
+              lower: [queryKey],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'queryKey',
+              lower: [queryKey],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'queryKey',
+              lower: [],
+              upper: [queryKey],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+}
+
+extension CachedSearchQueryFilter
+    on QueryBuilder<CachedSearch, CachedSearch, QFilterCondition> {
+  QueryBuilder<CachedSearch, CachedSearch, QAfterFilterCondition>
+      cachedAtEqualTo(DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'cachedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterFilterCondition>
+      cachedAtGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'cachedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterFilterCondition>
+      cachedAtLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'cachedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterFilterCondition>
+      cachedAtBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'cachedAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterFilterCondition>
+      expiryTimeEqualTo(DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'expiryTime',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterFilterCondition>
+      expiryTimeGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'expiryTime',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterFilterCondition>
+      expiryTimeLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'expiryTime',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterFilterCondition>
+      expiryTimeBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'expiryTime',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterFilterCondition> idEqualTo(
+      Id value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterFilterCondition> idGreaterThan(
+    Id value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterFilterCondition> idLessThan(
+    Id value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterFilterCondition> idBetween(
+    Id lower,
+    Id upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterFilterCondition>
+      isExpiredEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isExpired',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterFilterCondition>
+      queryKeyEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'queryKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterFilterCondition>
+      queryKeyGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'queryKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterFilterCondition>
+      queryKeyLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'queryKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterFilterCondition>
+      queryKeyBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'queryKey',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterFilterCondition>
+      queryKeyStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'queryKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterFilterCondition>
+      queryKeyEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'queryKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterFilterCondition>
+      queryKeyContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'queryKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterFilterCondition>
+      queryKeyMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'queryKey',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterFilterCondition>
+      queryKeyIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'queryKey',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterFilterCondition>
+      queryKeyIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'queryKey',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterFilterCondition>
+      responseJsonEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'responseJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterFilterCondition>
+      responseJsonGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'responseJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterFilterCondition>
+      responseJsonLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'responseJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterFilterCondition>
+      responseJsonBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'responseJson',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterFilterCondition>
+      responseJsonStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'responseJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterFilterCondition>
+      responseJsonEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'responseJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterFilterCondition>
+      responseJsonContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'responseJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterFilterCondition>
+      responseJsonMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'responseJson',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterFilterCondition>
+      responseJsonIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'responseJson',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterFilterCondition>
+      responseJsonIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'responseJson',
+        value: '',
+      ));
+    });
+  }
+}
+
+extension CachedSearchQueryObject
+    on QueryBuilder<CachedSearch, CachedSearch, QFilterCondition> {}
+
+extension CachedSearchQueryLinks
+    on QueryBuilder<CachedSearch, CachedSearch, QFilterCondition> {}
+
+extension CachedSearchQuerySortBy
+    on QueryBuilder<CachedSearch, CachedSearch, QSortBy> {
+  QueryBuilder<CachedSearch, CachedSearch, QAfterSortBy> sortByCachedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cachedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterSortBy> sortByCachedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cachedAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterSortBy> sortByExpiryTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'expiryTime', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterSortBy>
+      sortByExpiryTimeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'expiryTime', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterSortBy> sortByIsExpired() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isExpired', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterSortBy> sortByIsExpiredDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isExpired', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterSortBy> sortByQueryKey() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'queryKey', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterSortBy> sortByQueryKeyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'queryKey', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterSortBy> sortByResponseJson() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'responseJson', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterSortBy>
+      sortByResponseJsonDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'responseJson', Sort.desc);
+    });
+  }
+}
+
+extension CachedSearchQuerySortThenBy
+    on QueryBuilder<CachedSearch, CachedSearch, QSortThenBy> {
+  QueryBuilder<CachedSearch, CachedSearch, QAfterSortBy> thenByCachedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cachedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterSortBy> thenByCachedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cachedAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterSortBy> thenByExpiryTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'expiryTime', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterSortBy>
+      thenByExpiryTimeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'expiryTime', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterSortBy> thenById() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterSortBy> thenByIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterSortBy> thenByIsExpired() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isExpired', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterSortBy> thenByIsExpiredDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isExpired', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterSortBy> thenByQueryKey() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'queryKey', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterSortBy> thenByQueryKeyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'queryKey', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterSortBy> thenByResponseJson() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'responseJson', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QAfterSortBy>
+      thenByResponseJsonDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'responseJson', Sort.desc);
+    });
+  }
+}
+
+extension CachedSearchQueryWhereDistinct
+    on QueryBuilder<CachedSearch, CachedSearch, QDistinct> {
+  QueryBuilder<CachedSearch, CachedSearch, QDistinct> distinctByCachedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'cachedAt');
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QDistinct> distinctByExpiryTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'expiryTime');
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QDistinct> distinctByIsExpired() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isExpired');
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QDistinct> distinctByQueryKey(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'queryKey', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<CachedSearch, CachedSearch, QDistinct> distinctByResponseJson(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'responseJson', caseSensitive: caseSensitive);
+    });
+  }
+}
+
+extension CachedSearchQueryProperty
+    on QueryBuilder<CachedSearch, CachedSearch, QQueryProperty> {
+  QueryBuilder<CachedSearch, int, QQueryOperations> idProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<CachedSearch, DateTime, QQueryOperations> cachedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'cachedAt');
+    });
+  }
+
+  QueryBuilder<CachedSearch, DateTime, QQueryOperations> expiryTimeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'expiryTime');
+    });
+  }
+
+  QueryBuilder<CachedSearch, bool, QQueryOperations> isExpiredProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isExpired');
+    });
+  }
+
+  QueryBuilder<CachedSearch, String, QQueryOperations> queryKeyProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'queryKey');
+    });
+  }
+
+  QueryBuilder<CachedSearch, String, QQueryOperations> responseJsonProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'responseJson');
+    });
+  }
+}

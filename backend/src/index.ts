@@ -829,7 +829,7 @@ app.get('/api/v1/charts/trending', async (c) => {
     .sort((a, b) => b.count - a.count)
     .slice(0, 50);
 
-  return c.json({ success: true, trending });
+  return c.json({ success: true, data: { tracks: trending, playlists: [] } });
 });
 
 
@@ -913,7 +913,7 @@ app.get('/api/v1/saavn/playlist', async (c) => {
 
   try {
     const playlist = await SaavnProvider.getPlaylist(id);
-    const res = { success: true, playlist };
+    const res = { success: true, playlist, tracks: playlist.tracks || [] };
     c.executionCtx.waitUntil(c.env.SEARCH_CACHE.put(cacheKey, JSON.stringify(res), { expirationTtl: 86400 }));
     return c.json(res);
   } catch (e: any) {
@@ -932,7 +932,7 @@ app.get('/api/v1/saavn/album', async (c) => {
 
   try {
     const album = await SaavnProvider.getAlbum(id);
-    const res = { success: true, album };
+    const res = { success: true, album, tracks: album.tracks || [] };
     c.executionCtx.waitUntil(c.env.SEARCH_CACHE.put(cacheKey, JSON.stringify(res), { expirationTtl: 86400 }));
     return c.json(res);
   } catch (e: any) {

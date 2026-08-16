@@ -42,18 +42,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize into video mode if the miniplayer was tapped while a video was active!
-    final videoProvider = ref.read(videoPlayerProvider);
-    final audioProvider = ref.read(audioPlayerProvider);
-    if (videoProvider.isVideoActive && audioProvider.currentSong != null) {
-      final vId = videoProvider.currentVideoId;
-      final sId = audioProvider.currentSong!.id;
-      if (vId == sId || vId == 'search:$sId') {
-        _isVideoMode = true;
-        _hasViewedVideoForCurrentSong = true;
-        _lastPlayedSongId = sId; // Prevent build() from resetting to false!
-      }
-    }
+    // Disabled video mode initialization for now, always default to audio
   }
 
   Future<void> _toggleMode(
@@ -79,10 +68,10 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
       final useVideoAudio = settingsProv.useVideoAudioSource;
 
       if (useVideoAudio) {
-        ref.read(videoPlayerProvider.notifier).setMuted(false);
+        // We will pass forceMute: false to playVideo
       } else {
         // Keep high quality audio playing from music player!
-        ref.read(videoPlayerProvider.notifier).setMuted(true);
+        // We will pass forceMute: true to playVideo
       }
 
       ref.read(videoPlayerProvider.notifier).setOnVideoStarted(() {
@@ -116,6 +105,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                 ).showSnackBar(SnackBar(content: Text(msg)));
               }
             },
+            forceMute: !settingsProv.useVideoAudioSource,
           );
     } else {
       // Switching to audio
@@ -494,7 +484,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
               setState(() {
-                _isVideoMode = isPodcast;
+                _isVideoMode = false; // Always default to audio mode
               });
               
               final settingsProv = ref.read(settingsProvider);
@@ -512,19 +502,6 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                   }
                 });
               }
-
-              ref.read(videoPlayerProvider.notifier).playVideo(
-                currentSong.id.contains(':')
-                    ? currentSong.id
-                    : 'search:${currentSong.id}',
-                currentSong.title,
-                currentSong.artist,
-                query: BackendApiService.cleanSearchQuery(
-                  currentSong.title,
-                  currentSong.artist,
-                ),
-                startPosition: ref.read(audioPlayerProvider).position,
-              );
             }
           });
         }

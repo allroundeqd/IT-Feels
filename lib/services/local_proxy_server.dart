@@ -56,9 +56,6 @@ class LocalProxyServer {
 
   static String getProxyUrl(String originalUrl) {
     if (!isRunning || kIsWeb) return originalUrl;
-    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-      return 'http://127.0.0.1:$_port/?url=${Uri.encodeComponent(originalUrl)}';
-    }
-    return originalUrl;
+    return 'http://127.0.0.1:$_port/?url=${Uri.encodeComponent(originalUrl)}';
   }
 }

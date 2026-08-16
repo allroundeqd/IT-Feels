@@ -27,6 +27,7 @@ final GetIt locator = GetIt.instance;
 Future<void> setupServiceLocator() async {
   // Initialize Isar Database
   await DatabaseService.init();
+  locator.registerLazySingleton<DatabaseService>(() => DatabaseService());
 
   // Setup structured logging
   locator.registerLazySingleton<Logger>(() => Logger(

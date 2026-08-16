@@ -8,6 +8,9 @@ import 'package:it_feels_music/data/models/song_model.dart';
 import 'package:it_feels_music/services/backend_api_service.dart';
 
 import 'package:string_similarity/string_similarity.dart';
+import 'package:it_feels_music/services/database_service.dart';
+import 'package:it_feels_music/data/models/cache_models.dart';
+import 'package:it_feels_music/core/utils/service_locator.dart';
 
 class LyricsResult {
   final String? staticLyrics;
@@ -54,7 +57,36 @@ class LyricsService {
 
     _lyricsCache[song.id] = {};
     _enforceCacheLimit(_lyricsCache, 100);
-    
+
+    unawaited(_checkIsarAndFetch(song, sessionId, onResult, onError));
+  }
+
+  Future<void> _checkIsarAndFetch(Song song, int sessionId, void Function(LyricsResult) onResult, Function(String)? onError) async {
+    final cached = await locator<DatabaseService>().getCachedLyrics(song.id);
+    if (cached != null && sessionId == _currentSessionId) {
+      try {
+        List<LyricLine> synced = [];
+        if (cached.syncedLyricsJson.isNotEmpty) {
+          final List<dynamic> jsonList = jsonDecode(cached.syncedLyricsJson);
+          synced = jsonList.map((e) => LyricLine.fromJson(e as Map<String, dynamic>)).toList();
+        }
+        
+        final res = LyricsResult(
+          staticLyrics: cached.staticLyrics,
+          syncedLyrics: synced,
+          source: cached.source,
+        );
+        
+        _lyricsCache[song.id]![res.source] = res;
+        onResult(res);
+        return; // Cache hit, skip network fetch
+      } catch (e) {
+        debugPrint('[LyricsService] Error parsing cached Isar lyrics: $e');
+      }
+    }
+
+    if (sessionId != _currentSessionId) return;
+
     bool hasSyncedResult = false;
     LyricsResult? pendingStaticResult;
     Timer? staticDebounceTimer;
@@ -65,15 +97,21 @@ class LyricsService {
       if (res != null && (res.hasSynced || res.hasStatic)) {
         _lyricsCache[song.id]![res.source] = res;
         
-        // Always yield to onResult so the UI dropdown populates all available providers.
-        // LyricsNotifier's `activeProvider` logic will naturally upgrade from Static to Synced.
+        // Save to Isar
+        final cacheObj = CachedLyrics()
+          ..songId = song.id
+          ..staticLyrics = res.staticLyrics
+          ..syncedLyricsJson = jsonEncode(res.syncedLyrics.map((l) => l.toJson()).toList())
+          ..source = res.source
+          ..cachedAt = DateTime.now()
+          ..expiryTime = DateTime.now().add(const Duration(days: 30));
+        locator<DatabaseService>().saveCachedLyrics(cacheObj);
+        
         if (res.hasSynced) {
           hasSyncedResult = true;
           staticDebounceTimer?.cancel();
         }
         
-        // If we haven't found a synced result yet, delay the static result slightly 
-        // to prevent UI flicker if a synced result is right behind it.
         if (!res.hasSynced && !hasSyncedResult) {
           pendingStaticResult = res;
           staticDebounceTimer?.cancel();
@@ -83,9 +121,6 @@ class LyricsService {
             }
           });
         } else {
-          // If it's a synced result, OR if we already found a synced result 
-          // (meaning the static result arrived late), just yield it immediately 
-          // so it enters the provider list.
           onResult(res);
         }
       }

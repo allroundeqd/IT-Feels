@@ -38,14 +38,7 @@ class GlassShieldWrapper extends ConsumerWidget {
       children: [
         Positioned.fill(
           child: Container(
-            // Increase opacity heavily if blur is disabled to maintain readability against the native OS acrylic background
             color: blurAmount == 0.0 ? shieldColor.withOpacity(0.95) : shieldColor,
-            child: blurAmount > 0.0
-                ? BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: blurAmount, sigmaY: blurAmount),
-                    child: const SizedBox.expand(),
-                  )
-                : const SizedBox.expand(),
           ),
         ),
         child,

@@ -627,8 +627,9 @@ class HomeNotifier extends Notifier<HomeState> {
     } catch (_) {}
   }
 
-  Future<void> fetchYouSongs(List<String> topArtists) async {
+  Future<void> fetchYouSongs(List<String> historyArtists) async {
     if (state.youSongs.isNotEmpty) return;
+    state = state.copyWith(isLoading: true);
 
     try {
       final favoriteArtists = await StorageService.getFavoriteArtists();
@@ -636,8 +637,8 @@ class HomeNotifier extends Notifier<HomeState> {
       
       var queryArtists = favoriteArtists.isNotEmpty
           ? favoriteArtists
-          : (topArtists.isNotEmpty
-            ? topArtists
+          : (historyArtists.isNotEmpty
+            ? historyArtists
             : (state.trendingSongs.isNotEmpty
                   ? state.trendingSongs
                         .map((e) => e.artist.split(',').first.trim())
@@ -694,8 +695,10 @@ class HomeNotifier extends Notifier<HomeState> {
           : newSongs;
       finalYou = _deduplicate(finalYou);
 
-      state = state.copyWith(youSongs: finalYou, youPlaylists: newPlaylists);
-    } catch (_) {}
+      state = state.copyWith(youSongs: finalYou, youPlaylists: newPlaylists, isLoading: false);
+    } catch (_) {
+      state = state.copyWith(isLoading: false);
+    }
   }
 
   void toggleMoodLanguage() {

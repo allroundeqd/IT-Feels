@@ -102,17 +102,15 @@ This document details the interaction with the JioSaavn API within the PixelPlay
 ### F. Get Stream URL (Decryption & Resolution)
 
 *   **Method:** `getStreamUrl(Song song)`
-*   **JioSaavn Endpoint:** `__call=song.getDetails` (only if `encryptedMediaUrl` is missing from the initial `Song` object)
-*   **Purpose:** Resolves the playable 320kbps audio URL for a given `Song`. This involves decryption if an `encryptedMediaUrl` is present.
-*   **Request Parameters:**
-    *   `pids`: The `saavnId` of the song (if `encryptedMediaUrl` needs to be fetched).
-*   **Logic Flow:**
-    1.  **Cache Check:** First checks an in-memory `_streamCache` to avoid redundant API calls and decryption.
-    2.  **Encrypted URL Check:** If `song.encryptedMediaUrl` is not already available, it makes an API call to `song.getDetails` to fetch it.
-    3.  **Decryption:** Once an encrypted URL (`encUrl`) is obtained, it uses `DesDecryptor.decrypt(encUrl)` to get the decrypted string.
-    4.  **URL Resolution:** Calls `DesDecryptor.get320kbpsUrl(decrypted)` to extract the high-quality stream URL.
-    5.  **Caching:** Caches the final stream URL for the song's `saavnId`.
-*   **Error Handling:** Returns `null` if no encrypted URL is found, decryption fails, or any exception occurs. Errors are printed to debug console.
+### B. Stream Resolution (`getStreamUrl`)
+
+1.  **Repository Call:** UI calls `MusicRepository.getStreamUrl(song)`.
+2.  **Addon Delegation:** The request is immediately forwarded to `AddonManager.getStreamUrl(song)`.
+3.  **Cloudflare Proxy:** The Javascript Addon delegates the extraction to the Cloudflare Worker proxy (`it-feels-backend`).
+4.  **Decryption/Fallback:** The Cloudflare backend securely decrypts the URL or falls back to YouTube extraction if the Saavn stream is unavailable.
+5.  **Proxy Server Loopback:** The `LocalProxyServer` wraps the returned stream URL with `127.0.0.1` on all platforms (except Web) to inject `User-Agent` and `Referer` headers, preventing CDN 403 blocks.
+
+*(Note: Native `DesDecryptor` methods have been completely stubbed out for legal compliance to prevent hardcoding decryption keys within the app binary).*
 
 ---
 

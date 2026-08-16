@@ -78,11 +78,12 @@ class _DesktopMiniplayerScreenState extends ConsumerState<DesktopMiniplayerScree
 
     return Scaffold(
       backgroundColor: Colors.black,
-      body: MouseRegion(
-        onEnter: (_) => setState(() => _isHovering = true),
-        onExit: (_) => setState(() => _isHovering = false),
-        child: GestureDetector(
-          onPanUpdate: (details) {
+      body: ExcludeSemantics(
+        child: MouseRegion(
+          onEnter: (_) => setState(() => _isHovering = true),
+          onExit: (_) => setState(() => _isHovering = false),
+          child: GestureDetector(
+            onPanUpdate: (details) {
             windowManager.startDragging();
           },
           onDoubleTap: _restoreWindow,
@@ -95,7 +96,7 @@ class _DesktopMiniplayerScreenState extends ConsumerState<DesktopMiniplayerScree
                   builder: (context) {
                     if (hasVideo) {
                       return Video(controller: videoState.videoController!, fit: BoxFit.cover, controls: NoVideoControls);
-                    } else if (videoState.isVideoActive) {
+                    } else if (settings.useVideoAudioSource && videoState.isVideoActive) {
                       return const Center(child: CleverLoadingText());
                     } else {
                       return _PiPLyricsView(
@@ -146,12 +147,10 @@ class _DesktopMiniplayerScreenState extends ConsumerState<DesktopMiniplayerScree
                                 );
                               });
                             },
-                            tooltip: 'Lyrics',
                           ),
                           IconButton(
                             icon: const Icon(Icons.open_in_full, color: Colors.white, size: 20),
                             onPressed: _restoreWindow,
-                            tooltip: 'Expand',
                           ),
                         ],
                       ),
@@ -185,9 +184,14 @@ class _DesktopMiniplayerScreenState extends ConsumerState<DesktopMiniplayerScree
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.skip_previous, color: Colors.white),
-                                iconSize: 24,
-                                onPressed: () => engine.skipToPrevious(),
+                                icon: const Icon(Icons.skip_previous, color: Colors.white, size: 24),
+                                onPressed: () {
+                                  if (engine.position.inSeconds > 3) {
+                                    engine.seek(Duration.zero);
+                                  } else {
+                                    engine.skipToPrevious();
+                                  }
+                                },
                               ),
                               IconButton(
                                 icon: const Icon(Icons.replay_10, color: Colors.white),
@@ -203,16 +207,22 @@ class _DesktopMiniplayerScreenState extends ConsumerState<DesktopMiniplayerScree
                                   if (_isDebouncing) return;
                                   setState(() => _isDebouncing = true);
                                   
-                                  if (settings.useVideoAudioSource && hasVideo && videoState.player != null) {
-                                    final p = videoState.player!;
-                                    p.state.playing ? await p.pause() : await p.play();
+                                  if (settings.useVideoAudioSource && hasVideo) {
+                                    if (isPlaying) {
+                                      await videoState.player?.pause();
+                                    } else {
+                                      await videoState.player?.play();
+                                    }
                                   } else {
-                                    await ref.read(audioPlayerProvider.notifier).togglePlayPause();
+                                    if (isPlaying) {
+                                      await engine.pause();
+                                    } else {
+                                      await engine.play();
+                                    }
                                   }
                                   
-                                  Future.delayed(const Duration(milliseconds: 300), () {
-                                    if (mounted) setState(() => _isDebouncing = false);
-                                  });
+                                  await Future.delayed(const Duration(milliseconds: 300));
+                                  if (mounted) setState(() => _isDebouncing = false);
                                 },
                               ),
                               IconButton(
@@ -223,8 +233,7 @@ class _DesktopMiniplayerScreenState extends ConsumerState<DesktopMiniplayerScree
                                 },
                               ),
                               IconButton(
-                                icon: const Icon(Icons.skip_next, color: Colors.white),
-                                iconSize: 24,
+                                icon: const Icon(Icons.skip_next, color: Colors.white, size: 24),
                                 onPressed: () => engine.skipToNext(),
                               ),
                             ],
@@ -239,8 +248,9 @@ class _DesktopMiniplayerScreenState extends ConsumerState<DesktopMiniplayerScree
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 class _PiPLyricsView extends ConsumerWidget {
@@ -278,9 +288,9 @@ class _PiPLyricsView extends ConsumerWidget {
             return blurAmount > 0
                 ? BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: blurAmount, sigmaY: blurAmount),
-                    child: Container(color: Colors.black.withValues(alpha: 0.5)),
+                    child: Container(color: Colors.black.withValues(alpha: 0.6)),
                   )
-                : Container(color: Colors.black.withValues(alpha: 0.8)); // darker if no blur
+                : Container(color: Colors.black.withValues(alpha: 0.7)); // darker if no blur
           },
         ),
         // Lyrics Content
@@ -303,36 +313,31 @@ class _PiPLyricsView extends ConsumerWidget {
               } else if (lyricsResult != null && lyricsResult.hasStatic && lyricsResult.staticLyrics != null) {
                 currentLine = "Lyrics available (Static)";
               } else if (lyricsState.lyricsNotFound) {
-                currentLine = "";
+                currentLine = "${song.title}\nby ${song.artist}";
               }
 
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 60.0),
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
                 child: Center(
-                  child: ExcludeSemantics(
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                    child: Text(
-                      currentLine,
-                      key: ValueKey(currentLine),
-                      textAlign: TextAlign.center,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.inter(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.w800,
-                        shadows: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.5),
-                            blurRadius: 10,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
+                  child: Text(
+                    currentLine,
+                    key: ValueKey(currentLine),
+                    textAlign: TextAlign.center,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.inter(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                      shadows: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.5),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                   ),
-                ),
                 ),
               );
             },

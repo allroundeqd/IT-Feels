@@ -22,6 +22,17 @@ class StorageService {
   static const String _hasSeenOnboardingKey = 'has_seen_onboarding_v1';
   
   static const String _favoriteArtistsKey = 'favorite_artists_v1';
+  static const String _lastSyncTimestampKey = 'last_sync_timestamp_v1';
+
+  static Future<int> getLastSyncTimestamp() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_lastSyncTimestampKey) ?? 0;
+  }
+
+  static Future<void> setLastSyncTimestamp(int timestamp) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_lastSyncTimestampKey, timestamp);
+  }
 
   static Future<List<String>> getFavoriteArtists() async {
     final prefs = await SharedPreferences.getInstance();

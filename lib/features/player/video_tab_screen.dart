@@ -316,8 +316,12 @@ class _VideoTabScreenState extends ConsumerState<VideoTabScreen> {
                       child: InkWell(
               borderRadius: BorderRadius.circular(20),
               onTap: () {
-                ref.read(videoPlayerProvider.notifier).playVideo(videoId, title, uploader);
-                context.push('/video_player');
+                // Temporarily disabled as per request
+                // ref.read(videoPlayerProvider.notifier).playVideo(videoId, title, uploader);
+                // context.push('/video_player');
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Video tab disabled for now.')),
+                );
               },
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

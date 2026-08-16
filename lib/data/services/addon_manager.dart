@@ -84,7 +84,21 @@ class AddonManager {
 
   Future<void> _loadPlugin(FileSystemEntity file) async {
     try {
-      final source = await File(file.path).readAsString();
+      String source = await File(file.path).readAsString();
+
+      // Polyfill for missing playlist/album fetchers in older backend_addon.js
+      if (!source.contains('getPlaylistTracksUrl') && source.contains('BACKEND_URL')) {
+        source += '''
+          
+          function getPlaylistTracksUrl(id) {
+              return BACKEND_URL + "/api/v1/playlist?id=" + encodeURIComponent(id);
+          }
+          function getAlbumTracksUrl(id) {
+              return BACKEND_URL + "/api/v1/album?id=" + encodeURIComponent(id);
+          }
+        ''';
+      }
+
       final JavascriptRuntime runtime = getJavascriptRuntime();
       
       runtime.evaluate(source);
@@ -109,16 +123,7 @@ class AddonManager {
             final data = jsonDecode(response.body);
             if (data['success'] == true && data['results'] != null) {
               for (var item in data['results']) {
-                allResults.add(Song(
-                  id: item['id']?.toString() ?? '',
-                  saavnId: item['id']?.toString() ?? '',
-                  title: item['title']?.toString() ?? '',
-                  artist: item['artist']?.toString() ?? '',
-                  album: item['album']?.toString() ?? 'Unknown',
-                  coverArt: item['coverArt']?.toString() ?? item['albumArt']?.toString() ?? '',
-                  duration: int.tryParse(item['duration']?.toString() ?? '0') ?? 0,
-                  addedAt: DateTime.now(),
-                ));
+                allResults.add(Song.fromJson(item));
               }
             }
           } else {
@@ -231,16 +236,7 @@ class AddonManager {
             final data = jsonDecode(response.body);
             if (data['success'] == true && data['results'] != null) {
               for (var item in data['results']) {
-                allResults.add(Song(
-                  id: item['id']?.toString() ?? '',
-                  saavnId: item['id']?.toString() ?? '',
-                  title: item['title']?.toString() ?? '',
-                  artist: item['artist']?.toString() ?? '',
-                  album: item['album']?.toString() ?? 'Podcast',
-                  coverArt: item['coverArt']?.toString() ?? item['albumArt']?.toString() ?? '',
-                  duration: int.tryParse(item['duration']?.toString() ?? '0') ?? 0,
-                  addedAt: DateTime.now(),
-                ));
+                allResults.add(Song.fromJson(item));
               }
             }
           }
@@ -329,7 +325,8 @@ class AddonManager {
   Future<String?> getStreamUrl(Song song) async {
     for (var runtime in _activeRuntimes) {
       try {
-        final query = '${song.title} ${song.artist}'.replaceAll("'", "\\'");
+        final artistStr = song.artist == 'Unknown Artist' ? '' : song.artist;
+        final query = '${song.title} $artistStr'.trim().replaceAll("'", "\\'");
         final jsResult = runtime.evaluate("typeof getStreamUrl === 'function' ? getStreamUrl('${song.id.replaceAll("'", "\\'")}', '$query') : null");
         final streamApiUrl = jsResult.stringResult.replaceAll('"', '');
         

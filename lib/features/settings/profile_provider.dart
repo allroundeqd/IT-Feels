@@ -12,15 +12,18 @@ class ProfileState {
     this.userAvatar = '',
   });
 
-  String getGreeting() {
+  String getTimeGreeting() {
     final hour = DateTime.now().hour;
-    String timeGreeting = 'Good Evening';
     if (hour < 12) {
-      timeGreeting = 'Good Morning';
+      return 'Good Morning';
     } else if (hour < 17) {
-      timeGreeting = 'Good Afternoon';
+      return 'Good Afternoon';
     }
+    return 'Good Evening';
+  }
 
+  String getGreeting() {
+    final timeGreeting = getTimeGreeting();
     if (userName.isNotEmpty) {
       return '$timeGreeting, $userName';
     }

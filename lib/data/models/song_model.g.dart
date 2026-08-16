@@ -62,74 +62,79 @@ const SongSchema = CollectionSchema(
       name: r'id',
       type: IsarType.string,
     ),
-    r'isExplicit': PropertySchema(
+    r'isDirty': PropertySchema(
       id: 9,
+      name: r'isDirty',
+      type: IsarType.bool,
+    ),
+    r'isExplicit': PropertySchema(
+      id: 10,
       name: r'isExplicit',
       type: IsarType.bool,
     ),
     r'isFavorite': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'isFavorite',
       type: IsarType.bool,
     ),
     r'language': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'language',
       type: IsarType.string,
     ),
     r'lastPlayedAt': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'lastPlayedAt',
       type: IsarType.dateTime,
     ),
     r'localFilePath': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'localFilePath',
       type: IsarType.string,
     ),
     r'offlineStatus': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'offlineStatus',
       type: IsarType.byte,
       enumMap: _SongofflineStatusEnumValueMap,
     ),
     r'playCount': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'playCount',
       type: IsarType.long,
     ),
     r'playbackPositionMs': PropertySchema(
-      id: 16,
+      id: 17,
       name: r'playbackPositionMs',
       type: IsarType.long,
     ),
     r'saavnId': PropertySchema(
-      id: 17,
+      id: 18,
       name: r'saavnId',
       type: IsarType.string,
     ),
     r'searchVector': PropertySchema(
-      id: 18,
+      id: 19,
       name: r'searchVector',
       type: IsarType.stringList,
     ),
     r'skipCount': PropertySchema(
-      id: 19,
+      id: 20,
       name: r'skipCount',
       type: IsarType.long,
     ),
     r'streamUrl': PropertySchema(
-      id: 20,
+      id: 21,
       name: r'streamUrl',
       type: IsarType.string,
     ),
     r'title': PropertySchema(
-      id: 21,
+      id: 22,
       name: r'title',
       type: IsarType.string,
     ),
     r'year': PropertySchema(
-      id: 22,
+      id: 23,
       name: r'year',
       type: IsarType.long,
     )
@@ -232,20 +237,21 @@ void _songSerialize(
   writer.writeString(offsets[6], object.genre);
   writer.writeBool(offsets[7], object.hasLyrics);
   writer.writeString(offsets[8], object.id);
-  writer.writeBool(offsets[9], object.isExplicit);
-  writer.writeBool(offsets[10], object.isFavorite);
-  writer.writeString(offsets[11], object.language);
-  writer.writeDateTime(offsets[12], object.lastPlayedAt);
-  writer.writeString(offsets[13], object.localFilePath);
-  writer.writeByte(offsets[14], object.offlineStatus.index);
-  writer.writeLong(offsets[15], object.playCount);
-  writer.writeLong(offsets[16], object.playbackPositionMs);
-  writer.writeString(offsets[17], object.saavnId);
-  writer.writeStringList(offsets[18], object.searchVector);
-  writer.writeLong(offsets[19], object.skipCount);
-  writer.writeString(offsets[20], object.streamUrl);
-  writer.writeString(offsets[21], object.title);
-  writer.writeLong(offsets[22], object.year);
+  writer.writeBool(offsets[9], object.isDirty);
+  writer.writeBool(offsets[10], object.isExplicit);
+  writer.writeBool(offsets[11], object.isFavorite);
+  writer.writeString(offsets[12], object.language);
+  writer.writeDateTime(offsets[13], object.lastPlayedAt);
+  writer.writeString(offsets[14], object.localFilePath);
+  writer.writeByte(offsets[15], object.offlineStatus.index);
+  writer.writeLong(offsets[16], object.playCount);
+  writer.writeLong(offsets[17], object.playbackPositionMs);
+  writer.writeString(offsets[18], object.saavnId);
+  writer.writeStringList(offsets[19], object.searchVector);
+  writer.writeLong(offsets[20], object.skipCount);
+  writer.writeString(offsets[21], object.streamUrl);
+  writer.writeString(offsets[22], object.title);
+  writer.writeLong(offsets[23], object.year);
 }
 
 Song _songDeserialize(
@@ -264,23 +270,24 @@ Song _songDeserialize(
     genre: reader.readStringOrNull(offsets[6]) ?? 'Unknown',
     hasLyrics: reader.readBoolOrNull(offsets[7]) ?? false,
     id: reader.readString(offsets[8]),
-    isExplicit: reader.readBoolOrNull(offsets[9]) ?? false,
-    isFavorite: reader.readBoolOrNull(offsets[10]) ?? false,
+    isDirty: reader.readBoolOrNull(offsets[9]) ?? false,
+    isExplicit: reader.readBoolOrNull(offsets[10]) ?? false,
+    isFavorite: reader.readBoolOrNull(offsets[11]) ?? false,
     isarId: id,
-    language: reader.readStringOrNull(offsets[11]) ?? 'unknown',
-    lastPlayedAt: reader.readDateTimeOrNull(offsets[12]),
-    localFilePath: reader.readStringOrNull(offsets[13]),
+    language: reader.readStringOrNull(offsets[12]) ?? 'unknown',
+    lastPlayedAt: reader.readDateTimeOrNull(offsets[13]),
+    localFilePath: reader.readStringOrNull(offsets[14]),
     offlineStatus:
-        _SongofflineStatusValueEnumMap[reader.readByteOrNull(offsets[14])] ??
+        _SongofflineStatusValueEnumMap[reader.readByteOrNull(offsets[15])] ??
             OfflineStatus.none,
-    playCount: reader.readLongOrNull(offsets[15]) ?? 0,
-    playbackPositionMs: reader.readLongOrNull(offsets[16]),
-    saavnId: reader.readString(offsets[17]),
-    searchVector: reader.readStringList(offsets[18]) ?? const [],
-    skipCount: reader.readLongOrNull(offsets[19]) ?? 0,
-    streamUrl: reader.readStringOrNull(offsets[20]),
-    title: reader.readString(offsets[21]),
-    year: reader.readLongOrNull(offsets[22]) ?? 2024,
+    playCount: reader.readLongOrNull(offsets[16]) ?? 0,
+    playbackPositionMs: reader.readLongOrNull(offsets[17]),
+    saavnId: reader.readString(offsets[18]),
+    searchVector: reader.readStringList(offsets[19]) ?? const [],
+    skipCount: reader.readLongOrNull(offsets[20]) ?? 0,
+    streamUrl: reader.readStringOrNull(offsets[21]),
+    title: reader.readString(offsets[22]),
+    year: reader.readLongOrNull(offsets[23]) ?? 2024,
   );
   return object;
 }
@@ -315,29 +322,31 @@ P _songDeserializeProp<P>(
     case 10:
       return (reader.readBoolOrNull(offset) ?? false) as P;
     case 11:
-      return (reader.readStringOrNull(offset) ?? 'unknown') as P;
+      return (reader.readBoolOrNull(offset) ?? false) as P;
     case 12:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readStringOrNull(offset) ?? 'unknown') as P;
     case 13:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 14:
+      return (reader.readStringOrNull(offset)) as P;
+    case 15:
       return (_SongofflineStatusValueEnumMap[reader.readByteOrNull(offset)] ??
           OfflineStatus.none) as P;
-    case 15:
-      return (reader.readLongOrNull(offset) ?? 0) as P;
     case 16:
-      return (reader.readLongOrNull(offset)) as P;
-    case 17:
-      return (reader.readString(offset)) as P;
-    case 18:
-      return (reader.readStringList(offset) ?? const []) as P;
-    case 19:
       return (reader.readLongOrNull(offset) ?? 0) as P;
-    case 20:
-      return (reader.readStringOrNull(offset)) as P;
-    case 21:
+    case 17:
+      return (reader.readLongOrNull(offset)) as P;
+    case 18:
       return (reader.readString(offset)) as P;
+    case 19:
+      return (reader.readStringList(offset) ?? const []) as P;
+    case 20:
+      return (reader.readLongOrNull(offset) ?? 0) as P;
+    case 21:
+      return (reader.readStringOrNull(offset)) as P;
     case 22:
+      return (reader.readString(offset)) as P;
+    case 23:
       return (reader.readLongOrNull(offset) ?? 2024) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1582,6 +1591,15 @@ extension SongQueryFilter on QueryBuilder<Song, Song, QFilterCondition> {
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'id',
         value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> isDirtyEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isDirty',
+        value: value,
       ));
     });
   }
@@ -3013,6 +3031,18 @@ extension SongQuerySortBy on QueryBuilder<Song, Song, QSortBy> {
     });
   }
 
+  QueryBuilder<Song, Song, QAfterSortBy> sortByIsDirty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isDirty', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterSortBy> sortByIsDirtyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isDirty', Sort.desc);
+    });
+  }
+
   QueryBuilder<Song, Song, QAfterSortBy> sortByIsExplicit() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isExplicit', Sort.asc);
@@ -3279,6 +3309,18 @@ extension SongQuerySortThenBy on QueryBuilder<Song, Song, QSortThenBy> {
     });
   }
 
+  QueryBuilder<Song, Song, QAfterSortBy> thenByIsDirty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isDirty', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterSortBy> thenByIsDirtyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isDirty', Sort.desc);
+    });
+  }
+
   QueryBuilder<Song, Song, QAfterSortBy> thenByIsExplicit() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isExplicit', Sort.asc);
@@ -3510,6 +3552,12 @@ extension SongQueryWhereDistinct on QueryBuilder<Song, Song, QDistinct> {
     });
   }
 
+  QueryBuilder<Song, Song, QDistinct> distinctByIsDirty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isDirty');
+    });
+  }
+
   QueryBuilder<Song, Song, QDistinct> distinctByIsExplicit() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'isExplicit');
@@ -3659,6 +3707,12 @@ extension SongQueryProperty on QueryBuilder<Song, Song, QQueryProperty> {
   QueryBuilder<Song, String, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<Song, bool, QQueryOperations> isDirtyProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isDirty');
     });
   }
 
