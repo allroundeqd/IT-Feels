@@ -55,47 +55,49 @@ class NowPlayingProgress extends ConsumerWidget {
 
     if (isVideoMode && videoProvider.videoController != null) {
       return ExcludeSemantics(
-        child: StreamBuilder<Duration>(
-          stream: videoProvider.player!.stream.position,
-          builder: (context, snapshot) {
-            final position = snapshot.data ?? videoProvider.player!.state.position;
-            final duration = videoProvider.player!.state.duration;
-            return Column(
-              children: [
-              WavySeekBar(
-                position: position,
-                duration: duration,
-                activeColor: accentColor,
-                inactiveColor: context.themeTextColor24,
-                onSeek: (newPos) {
-                  ref.read(videoPlayerProvider.notifier).seekTo(newPos);
-                  final settingsProv = ref.read(settingsProvider);
-                  if (!settingsProv.useVideoAudioSource) {
-                    ref.read(audioPlayerProvider.notifier).seek(newPos);
-                  }
+        child: videoProvider.player != null
+            ? StreamBuilder<Duration>(
+                stream: videoProvider.player!.stream.position,
+                builder: (context, snapshot) {
+                  final position = snapshot.data ?? videoProvider.player!.state.position;
+                  final duration = videoProvider.player!.state.duration;
+                  return Column(
+                    children: [
+                      WavySeekBar(
+                        position: position,
+                        duration: duration,
+                        activeColor: accentColor,
+                        inactiveColor: context.themeTextColor24,
+                        onSeek: (newPos) {
+                          ref.read(videoPlayerProvider.notifier).seekTo(newPos);
+                          final settingsProv = ref.read(settingsProvider);
+                          if (!settingsProv.useVideoAudioSource) {
+                            ref.read(audioPlayerProvider.notifier).seek(newPos);
+                          }
+                        },
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              _formatDuration(position),
+                              style: AppTypography.interNormal.copyWith(color: context.themeMutedTextColor, fontSize: 12),
+                            ),
+                            Text(
+                              _formatDuration(duration),
+                              style: AppTypography.interNormal.copyWith(color: context.themeMutedTextColor, fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
                 },
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      _formatDuration(position),
-                      style: AppTypography.interNormal.copyWith(color: context.themeMutedTextColor, fontSize: 12),
-                    ),
-                    Text(
-                      _formatDuration(duration),
-                      style: AppTypography.interNormal.copyWith(color: context.themeMutedTextColor, fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
+              )
+            : const SizedBox.shrink(),
+      );
     } // Closes if (isVideoMode)
 
     final duration = ref.watch(audioPlayerProvider.select((p) => p.duration));

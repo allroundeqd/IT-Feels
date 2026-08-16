@@ -95,32 +95,34 @@ class VideoMiniplayer extends ConsumerWidget {
               ),
               // Play/Pause Button (Center)
               Center(
-                child: StreamBuilder<bool>(
-                  stream: videoProvider.player!.stream.playing,
-                  initialData: videoProvider.player!.state.playing,
-                  builder: (context, snapshot) {
-                    final isPlaying = snapshot.data ?? false;
-                    return GestureDetector(
-                      onTap: () {
-                        isPlaying
-                            ? videoProvider.player!.pause()
-                            : videoProvider.player!.play();
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: const BoxDecoration(
-                          color: Colors.black45,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          isPlaying ? Icons.pause : Icons.play_arrow,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                      ),
-                    );
-                  },
-                ),
+                child: videoProvider.player != null
+                    ? StreamBuilder<bool>(
+                        stream: videoProvider.player!.stream.playing,
+                        initialData: videoProvider.player!.state.playing,
+                        builder: (context, snapshot) {
+                          final isPlaying = snapshot.data ?? false;
+                          return GestureDetector(
+                            onTap: () {
+                              isPlaying
+                                  ? videoProvider.player!.pause()
+                                  : videoProvider.player!.play();
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: const BoxDecoration(
+                                color: Colors.black45,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                isPlaying ? Icons.pause : Icons.play_arrow,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                            ),
+                          );
+                        },
+                      )
+                    : const SizedBox.shrink(),
               ),
             ],
           ),

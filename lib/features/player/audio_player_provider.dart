@@ -512,10 +512,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
 
     _eventSubscriptions.add(engine.playbackStateStream.listen((stateData) {
       if (stateData.processingState == AudioProcessingState.completed) {
-        if (!_isHandlingCompletion) {
-          _isHandlingCompletion = true;
-          _handleTrackCompleted();
-        }
+        _handleTrackCompleted();
       }
       
       if (state.currentRoomId != null &&

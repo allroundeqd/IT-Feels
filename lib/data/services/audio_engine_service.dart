@@ -123,12 +123,20 @@ class AudioEngineService {
     try {
       if (enabled) {
         // Boost low frequencies and high frequencies using libmpv audio filters
-        // equalizer=f=64:width_type=q:w=1:g=5 boosts 64Hz by 5dB
         final af = 'equalizer=f=64:width_type=q:w=1:g=5,equalizer=f=4000:width_type=q:w=1:g=3';
-        // media_kit 1.1 doesn't directly expose setProperty in dart, but we can use setVolume for Loudness
-        await audioHandler.player.setVolume(120.0); // 120% volume (Loudness Enhancer)
+        try {
+          // Access the NativePlayer's setProperty method dynamically
+          await (audioHandler.player.platform as dynamic).setProperty('af', af);
+        } catch (_) {
+          // Fallback if platform does not support setProperty
+          await audioHandler.player.setVolume(120.0);
+        }
       } else {
-        await audioHandler.player.setVolume(100.0);
+        try {
+          await (audioHandler.player.platform as dynamic).setProperty('af', '');
+        } catch (_) {
+          await audioHandler.player.setVolume(100.0);
+        }
       }
       saveAudioSettings();
     } catch (e) {
