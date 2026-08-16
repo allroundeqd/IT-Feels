@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'package:window_manager/window_manager.dart';
@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:it_feels_music/core/providers/riverpod_bridge.dart';
 import 'package:it_feels_music/core/theme/theme_ext.dart';
+import 'package:it_feels_music/core/widgets/glass_container.dart';
 import 'package:it_feels_music/core/theme/app_dimensions.dart';
 
 class HiddenSongsScreen extends ConsumerWidget {
@@ -47,9 +48,11 @@ class HiddenSongsScreen extends ConsumerWidget {
               final song = hiddenSongs[index];
               return Padding(
                 padding: const EdgeInsets.only(bottom: 8),
-                child: Material(
-                  color: context.themeCardColor,
-                  borderRadius: BorderRadius.circular(12),
+                child: GlassContainer(
+                  borderRadius: 12,
+                  child: Material(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
                   child: ListTile(
                     title: Text(
                       song.title,
@@ -78,6 +81,7 @@ class HiddenSongsScreen extends ConsumerWidget {
                       child: const Text("UNHIDE"),
                     ),
                   ),
+                ),
                 ),
               );
             },

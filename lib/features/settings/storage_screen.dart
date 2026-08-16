@@ -5,6 +5,7 @@ import 'package:window_manager/window_manager.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:it_feels_music/core/theme/theme_ext.dart';
+import 'package:it_feels_music/core/widgets/glass_container.dart';
 import 'package:it_feels_music/core/theme/app_dimensions.dart';
 import 'package:it_feels_music/features/settings/storage_provider.dart';
 
@@ -107,12 +108,9 @@ class StorageScreen extends ConsumerWidget {
   }
 
   Widget _buildStorageBar(BuildContext context, StorageState state) {
-    return Container(
+    return GlassContainer(
+      borderRadius: 20,
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: context.themeSurfaceColor,
-        borderRadius: BorderRadius.circular(20),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

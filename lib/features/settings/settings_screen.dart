@@ -26,6 +26,7 @@ import 'package:it_feels_music/core/utils/service_locator.dart';
 import 'package:it_feels_music/services/download_service.dart';
 import 'package:it_feels_music/core/theme/theme_ext.dart';
 import 'package:it_feels_music/core/widgets/glass_shield_wrapper.dart';
+import 'package:it_feels_music/core/widgets/glass_container.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -630,11 +631,13 @@ class SettingsScreen extends ConsumerWidget {
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
-      child: Material(
-        color: context.themeCardColor.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(16),
-        clipBehavior: Clip.antiAlias,
-        child: Theme(
+      child: GlassContainer(
+        borderRadius: 16,
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          clipBehavior: Clip.antiAlias,
+          child: Theme(
           data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
           child: ExpansionTile(
             initiallyExpanded: initiallyExpanded,
@@ -662,6 +665,7 @@ class SettingsScreen extends ConsumerWidget {
               ...children,
             ],
           ),
+        ),
         ),
       ),
     );
