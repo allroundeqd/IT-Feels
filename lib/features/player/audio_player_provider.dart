@@ -511,11 +511,13 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       }
     }));
 
-    _eventSubscriptions.add(engine.playbackStateStream.listen((stateData) {
-      if (stateData.processingState == AudioProcessingState.completed) {
+    _eventSubscriptions.add(engine.trackCompletedStream.listen((completed) {
+      if (completed) {
         _handleTrackCompleted();
       }
-      
+    }));
+
+    _eventSubscriptions.add(engine.playbackStateStream.listen((stateData) {
       if (state.currentRoomId != null &&
           state.isHost &&
           state.currentSong != null) {

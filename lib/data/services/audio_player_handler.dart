@@ -79,7 +79,7 @@ class AudioPlayerHandler extends BaseAudioHandler with SeekHandler {
     });
     _player.stream.completed.listen((completed) {
       if (completed) {
-        _broadcastState(isCompleted: true);
+        _broadcastState(); // Do not emit isCompleted to prevent iOS teardown
       }
     });
     _player.stream.buffering.listen((buffering) {
@@ -87,13 +87,11 @@ class AudioPlayerHandler extends BaseAudioHandler with SeekHandler {
     });
   }
 
-  void _broadcastState({bool isCompleted = false, bool isBuffering = false}) {
+  void _broadcastState({bool isBuffering = false}) {
     final playing = _player.state.playing;
     
     AudioProcessingState audioProcessingState = AudioProcessingState.ready;
-    if (isCompleted) {
-      audioProcessingState = AudioProcessingState.completed;
-    } else if (isBuffering) {
+    if (isBuffering) {
       audioProcessingState = AudioProcessingState.buffering;
     } else if (playing) {
       audioProcessingState = AudioProcessingState.ready;

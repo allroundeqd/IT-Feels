@@ -28,6 +28,7 @@ class AudioEngineService {
   
   Stream<bool> get playerStateStream => audioHandler.player.stream.playing;
   Stream<bool> get bufferingStream => audioHandler.player.stream.buffering;
+  Stream<bool> get trackCompletedStream => audioHandler.player.stream.completed;
   
   Song? currentSong;
   
